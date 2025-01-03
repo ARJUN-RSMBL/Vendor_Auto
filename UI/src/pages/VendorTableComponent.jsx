@@ -18,30 +18,50 @@ function VendorTableComponent() {
     }
   };
   return (
-    <div>
-      <h2>Vendor Details</h2>
-      <table className="vendor-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Expiry Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {vendors.map((vendors) => (
-            <tr key={vendors.id}>
-              <td>{vendors.id}</td>
-              <td>{vendors.name}</td>
-              <td>{vendors.email}</td>
-              <td>{vendors.expiryDate}</td>
-              <td>{vendors.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="vendor-container">
+      <div className="vendor-header">
+        <h2>Vendor Details</h2>
+        <button className="refresh-button" onClick={fetchVendors}>
+          <i className="fas fa-sync"></i> Refresh
+        </button>
+      </div>
+
+      {vendors.length === 0 ? (
+        <div className="no-data">
+          <p>No vendors found</p>
+        </div>
+      ) : (
+        <div className="table-responsive">
+          <table className="vendor-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Expiry Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendors.map((vendor) => (
+                <tr key={vendor.id}>
+                  <td>#{vendor.id}</td>
+                  <td>{vendor.name}</td>
+                  <td>
+                    <a href={`mailto:${vendor.email}`}>{vendor.email}</a>
+                  </td>
+                  <td>{new Date(vendor.expiryDate).toLocaleDateString()}</td>
+                  <td>
+                    <span className={`status-badge ${vendor.status.toLowerCase()}`}>
+                      {vendor.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

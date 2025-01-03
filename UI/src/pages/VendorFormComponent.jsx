@@ -1,133 +1,210 @@
-import React, { useState, useEffect } from 'react'
-import '../styles/FormStyles.css'
-import vendorService from '../services/vendorService'
-// import roleService from '../services/roleService'
+import React, { useState } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import '../styles/FormStyles.css';
+import vendorService from '../services/vendorService';
 
 function VendorFormComponent() {
-  // Add state management
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     expiryDate: '',
-    roleId: ''
-  })
-  // const [roles, setRoles] = useState([])
+  });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
-  // Fetch roles on component mount
-  // useEffect(() => {
-  //   loadRoles()
-  // }, [])
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (formData.name.length < 3) {
+      newErrors.name = 'Name must be at least 3 characters';
+    }
 
-  // const loadRoles = async () => {
-  //   try {
-  //     const response = await roleService.getAllRoles()
-  //     setRoles(response.data)
-  //   } catch (error) {
-  //     console.error('Error loading roles:', error)
-  //   }
-  // }
-  
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
 
-  // Handle input changes
+    // Expiry date validation
+    if (!formData.expiryDate) {
+      newErrors.expiryDate = 'Expiry date is required';
+    } else {
+      const selected = new Date(formData.expiryDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selected < today) {
+        newErrors.expiryDate = 'Expiry date cannot be in the past';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateForm();
+  };
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (touched[name]) {
+      validateForm();
+    }
+  };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+    setTouched({
+      name: true,
+      email: true,
+      expiryDate: true
+    });
+
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      await vendorService.createVendor(formData)
-      // Clear form after successful submission
+      await vendorService.createVendor(formData);
+      toast.success('Vendor registered successfully!');
+      // Reset form
       setFormData({
         name: '',
         email: '',
-        expiryDate: '',
-        // roleId: ''
-      })
-      alert('Vendor registered successfully!')
+        expiryDate: ''
+      });
+      setTouched({});
+      setErrors({});
     } catch (error) {
-      console.error('Error submitting form:', error)
-      alert('Error registering Vendor')
+      toast.error(error.response?.data?.message || 'Failed to register vendor');
+    } finally {
+      setIsSubmitting(false);
     }
-  }
-
+  };
 
   return (
     <div className="iqama-form-container">
-      <h2 className="form-title">Vendor Registration Form</h2>
-      <form className="iqama-form" onSubmit={handleSubmit}>  {/* Add onSubmit handler here */}
-        <div className="form-group">
-          <label htmlFor="name" className="form-label">Name:</label>
-          <input
-            className="form-input"
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
+      <div className="form-header">
+        <div className="form-icon-wrapper">
+          <i className="bi bi-person-plus-fill"></i>
         </div>
+        <h2 className="form-title">Vendor Registration</h2>
+        <p className="form-subtitle">Enter vendor details below</p>
+      </div>
 
-        <div className="form-group">
-          <label htmlFor="email" className="form-label">Email:</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="form-input"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="expiryDate" className="form-label">Expiry Date:</label>
-          <input
-            type="date"
-            id="expiryDate"
-            name="expiryDate"
-            value={formData.expiryDate}
-            onChange={handleChange}
-            required
-            className="form-input"
-          />
-        </div>
-
-        {/* <div className="form-group">
-          <label htmlFor="roleId" className="form-label">Role:</label>
-          <select
-            id="roleId"
-            name="roleId"
-            value={formData.roleId}
-            onChange={handleChange}
-            required
-            className="form-select"
-          >
-            <option value="">Select a Role</option>
-            {roles && roles.length > 0 ? ( // Add conditional rendering
-              roles.map(role => (
-                <option key={role.id} value={role.id}>
-                  {role.roleName}
-                </option>
-              ))
-            ) : (
-              <option value="" disabled>No roles available</option>
+      <form className="iqama-form" onSubmit={handleSubmit} noValidate>
+        <div className={`form-group ${errors.name && touched.name ? 'has-error' : ''}`}>
+          <label htmlFor="name" className="form-label">
+            <i className="bi bi-person me-2"></i>
+            Name
+          </label>
+          <div className="input-wrapper">
+            <input
+              className="form-input"
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Enter vendor name"
+              required
+            />
+            {errors.name && touched.name && (
+              <div className="error-message">
+                <i className="bi bi-exclamation-circle"></i>
+                {errors.name}
+              </div>
             )}
-          </select>
-        </div> */}
+          </div>
+        </div>
 
-        <br />
-        <button type="submit" className="form-button">Submit</button>
+        <div className={`form-group ${errors.email && touched.email ? 'has-error' : ''}`}>
+          <label htmlFor="email" className="form-label">
+            <i className="bi bi-envelope me-2"></i>
+            Email
+          </label>
+          <div className="input-wrapper">
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Enter email address"
+              required
+              className="form-input"
+            />
+            {errors.email && touched.email && (
+              <div className="error-message">
+                <i className="bi bi-exclamation-circle"></i>
+                {errors.email}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={`form-group ${errors.expiryDate && touched.expiryDate ? 'has-error' : ''}`}>
+          <label htmlFor="expiryDate" className="form-label">
+            <i className="bi bi-calendar me-2"></i>
+            Expiry Date
+          </label>
+          <div className="input-wrapper">
+            <input
+              type="date"
+              id="expiryDate"
+              name="expiryDate"
+              value={formData.expiryDate}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              required
+              className="form-input"
+              min={new Date().toISOString().split('T')[0]}
+            />
+            {errors.expiryDate && touched.expiryDate && (
+              <div className="error-message">
+                <i className="bi bi-exclamation-circle"></i>
+                {errors.expiryDate}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          className="form-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <i className="bi bi-hourglass-split me-2 spinning"></i>
+              Submitting...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-check-circle me-2"></i>
+              Register Vendor
+            </>
+          )}
+        </button>
       </form>
-      <br />
     </div>
-  )
+  );
 }
 
-export default VendorFormComponent
+export default VendorFormComponent;
