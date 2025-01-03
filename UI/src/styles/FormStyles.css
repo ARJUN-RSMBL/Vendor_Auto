@@ -1,21 +1,32 @@
 .iqama-form-container {
-    max-width: 600px;
+    width: 100%;
+    max-width: 800px; /* Increased from 600px */
     margin: 2rem auto;
-    padding: 2.5rem;
+    padding: 3rem; /* Increased padding */
     background: white;
     border-radius: 15px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
 }
 
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.basic-info {
+    grid-column: 1 / -1;
+}
+
 .form-header {
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 3rem;
 }
 
 .form-icon-wrapper {
-    width: 60px;
-    height: 60px;
+    width: 70px; /* Larger icon wrapper */
+    height: 70px;
     background: linear-gradient(135deg, #1a237e, #0d47a1);
     border-radius: 50%;
     display: flex;
@@ -25,33 +36,33 @@
 }
 
 .form-icon-wrapper i {
-    font-size: 1.8rem;
+    font-size: 2rem;
     color: white;
 }
 
 .form-title {
     color: #1a237e;
-    font-size: 1.8rem;
+    font-size: 2.2rem; /* Larger title */
+    margin-bottom: 0.8rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
 }
 
 .form-subtitle {
     color: #666;
-    font-size: 0.9rem;
+    font-size: 1.1rem; /* Larger subtitle */
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.8rem;
     position: relative;
 }
 
 .form-label {
     display: block;
-    margin-bottom: 0.5rem;
+    font-size: 1rem; /* Slightly larger font */
+    margin-bottom: 0.8rem;
     color: #333;
     font-weight: 500;
-    font-size: 0.9rem;
     transition: color 0.3s ease;
 }
 
@@ -61,8 +72,8 @@
 
 .form-input {
     width: 100%;
-    padding: 0.8rem 1rem;
-    font-size: 1rem;
+    padding: 0.9rem 1.2rem; /* Larger padding */
+    font-size: 1.1rem;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     transition: all 0.3s ease;
@@ -95,8 +106,9 @@
 
 .form-button {
     width: 100%;
-    padding: 1rem;
-    font-size: 1rem;
+    padding: 1.2rem; /* Larger padding */
+    font-size: 1.1rem; 
+    margin-top: 2rem;
     font-weight: 600;
     color: white;
     background: linear-gradient(135deg, #1a237e, #0d47a1);
@@ -132,14 +144,39 @@
 }
 
 /* Responsive adjustments */
+@media (max-width: 992px) {
+    .iqama-form-container {
+        max-width: 700px;
+        padding: 2.5rem;
+    }
+}
+
 @media (max-width: 768px) {
     .iqama-form-container {
         margin: 1rem;
         padding: 1.5rem;
     }
 
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
     .form-title {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
+    }
+
+    .form-subtitle {
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-input {
+        padding: 0.8rem 1rem;
+        font-size: 1rem;
     }
 }
 
@@ -151,4 +188,45 @@
 .form-input.is-valid:focus {
     border-color: #28a745;
     box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+/* Add these new styles */
+.form-section-divider {
+    grid-column: 1 / -1;
+    margin: 2.5rem 0;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.section-title {
+    color: #1a237e;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231a237e' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Add smooth transitions */
+.form-input,
+.form-button,
+.form-icon-wrapper {
+    transition: all 0.3s ease;
 }
