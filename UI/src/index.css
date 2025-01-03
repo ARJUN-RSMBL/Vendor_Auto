@@ -1,19 +1,72 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'animate.css';
 
-/* Custom styles */
-.btn {
+/* Login Form Styles */
+.form-control:focus,
+.form-check-input:focus {
+    border-color: #1a237e;
+    box-shadow: 0 0 0 0.25rem rgba(26, 35, 126, 0.15);
+}
+
+.input-group-text {
+    border: 1px solid #ced4da;
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #1a237e, #0d47a1);
+    border: none;
     transition: all 0.3s ease;
 }
 
-.btn:hover {
+.btn-primary:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 35, 126, 0.25);
+}
+
+.social-btn {
+  width: 45px;
+  height: 45px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.social-btn:hover {
+  transform: translateY(-2px);
+  color: white;
+  background-color: var(--hover-color);
+}
+
+.hover-link {
+  transition: all 0.3s ease;
+}
+
+.hover-link:hover {
+  transform: translateY(-1px);
+  text-decoration: underline !important;
 }
 
 .card {
-    transition: all 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-5px);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Social Login Icons */
+.bi-google { color: #DB4437; }
+.bi-facebook { color: #4267B2; }
+.bi-twitter { color: #1DA1F2; }
+.bi-linkedin { color: #0077B5; }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .card-body {
+      padding: 2rem !important;
+  }
 }
