@@ -11,21 +11,21 @@ function VendorFormComponent() {
     expiryDate: '',
     roleId: ''
   })
-  const [roles, setRoles] = useState([])
+  // const [roles, setRoles] = useState([])
 
   // Fetch roles on component mount
-  useEffect(() => {
-    loadRoles()
-  }, [])
+  // useEffect(() => {
+  //   loadRoles()
+  // }, [])
 
-  const loadRoles = async () => {
-    try {
-      const response = await roleService.getAllRoles()
-      setRoles(response.data)
-    } catch (error) {
-      console.error('Error loading roles:', error)
-    }
-  }
+  // const loadRoles = async () => {
+  //   try {
+  //     const response = await roleService.getAllRoles()
+  //     setRoles(response.data)
+  //   } catch (error) {
+  //     console.error('Error loading roles:', error)
+  //   }
+  // }
   
 
   // Handle input changes
@@ -40,25 +40,25 @@ function VendorFormComponent() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      await vendorService.createEmployee(formData)
+      await vendorService.createVendor(formData)
       // Clear form after successful submission
       setFormData({
         name: '',
         email: '',
         expiryDate: '',
-        roleId: ''
+        // roleId: ''
       })
-      alert('Employee registered successfully!')
+      alert('Vendor registered successfully!')
     } catch (error) {
       console.error('Error submitting form:', error)
-      alert('Error registering employee')
+      alert('Error registering Vendor')
     }
   }
 
 
   return (
     <div className="iqama-form-container">
-      <h2 className="form-title">Employee Registration Form</h2>
+      <h2 className="form-title">Vendor Registration Form</h2>
       <form className="iqama-form" onSubmit={handleSubmit}>  {/* Add onSubmit handler here */}
         <div className="form-group">
           <label htmlFor="name" className="form-label">Name:</label>

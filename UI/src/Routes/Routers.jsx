@@ -1,8 +1,8 @@
 import { Route, Routes } from 'react-router-dom'
-import IqamaFormComponent from '../pages/IqamaFormComponent'
+import VendorTableComponent from '../pages/VendorTableComponent'
 import LoginComponent from '../components/LoginComponent';
 import Home from '../components/Home';
-import EmployeeTableComponent from '../pages/VendorTableComponent';
+import VendorFormComponent from '../pages/VendorFormComponent';
 
 
 function Routers() {
@@ -11,7 +11,7 @@ function Routers() {
         <>
             <Routes>
                 <Route path='/' element={<Home />} />
-                <Route path='/form' element={<IqamaFormComponent />}></Route>
+                <Route path='/form' element={<VendorFormComponent />}></Route>
                 <Route path='/vendors' element={<VendorTableComponent />}></Route>
                 <Route path='/login' element={<LoginComponent />}></Route>
             </Routes>
