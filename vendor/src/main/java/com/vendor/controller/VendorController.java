@@ -55,12 +55,12 @@ public class VendorController {
         return new ResponseEntity<>(vendors, HttpStatus.OK);
     }
 
-    @GetMapping("/{name}")
+    @GetMapping("/name/{name}")
     public ResponseEntity<Vendor> getVendorByName( @PathVariable String name) {
         Vendor vendor = vendorService.getVendorByName(name);
         return new ResponseEntity<>(vendor, HttpStatus.OK);
     }
-    
+
     @GetMapping("/test-scheduler")
     public void testScheduler() {
         vendorService.checkAndSendExpiryNotifications();
