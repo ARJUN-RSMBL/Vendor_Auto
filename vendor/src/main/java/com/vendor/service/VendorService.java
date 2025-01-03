@@ -48,11 +48,11 @@ public class VendorService {
 
         // Retrieve the existing vendor
         Vendor existingVendor = vendorRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Vendor not found with id: " + id));
 
         // Update only the fields that are not null in the incoming object
         if (updatedVendor.getName() != null) {
-            existingVendor.setName(existingVendor.getName());
+            existingVendor.setName(updatedVendor.getName());
         }
         if (updatedVendor.getEmail() != null) {
             existingVendor.setEmail(updatedVendor.getEmail());
@@ -81,7 +81,7 @@ public class VendorService {
 
     }
 
-    @Bean
+
     //@Scheduled(cron = "0 * * * * ?") // Runs every minute for testing;
     public void checkAndSendExpiryNotifications() {
         System.out.println("Check Expiry Notifications");

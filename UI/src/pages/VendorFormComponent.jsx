@@ -10,7 +10,7 @@ function VendorFormComponent() {
     name: '',
     email: '',
     expiryDate: '',
-    licenseNumber: '',
+    vendorLicense: '',
     licenseType: '',
     licenseIssueDate: '',
     licenseExpiryDate: '',
@@ -62,8 +62,8 @@ function VendorFormComponent() {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    if (formData.licenseNumber && formData.licenseNumber.length < 5) {
-      newErrors.licenseNumber = 'License number must be at least 5 characters';
+    if (formData.vendorLicense && formData.vendorLicense.length < 5) {
+      newErrors.vendorLicense = 'License number must be at least 5 characters';
     }
 
     if (formData.licenseExpiryDate && formData.licenseIssueDate) {
@@ -108,7 +108,7 @@ function VendorFormComponent() {
         name: '',
         email: '',
         expiryDate: '',
-        licenseNumber: '',
+        vendorLicense: '',
         licenseType: '',
         licenseIssueDate: '',
         licenseExpiryDate: '',
@@ -217,27 +217,27 @@ function VendorFormComponent() {
           <h3 className="section-title">License Information</h3>
         </div>
 
-        <div className={`form-group ${errors.licenseNumber && touched.licenseNumber ? 'has-error' : ''}`}>
-          <label htmlFor="licenseNumber" className="form-label">
+        <div className={`form-group ${errors.vendorLicense && touched.vendorLicense ? 'has-error' : ''}`}>
+          <label htmlFor="vendorLicense" className="form-label">
             <i className="bi bi-upc-scan me-2"></i>
             License Number
           </label>
           <div className="input-wrapper">
             <input
               type="text"
-              id="licenseNumber"
-              name="licenseNumber"
+              id="vendorLicense"
+              name="vendorLicense"
               className="form-input"
-              value={formData.licenseNumber}
+              value={formData.vendorLicense}
               onChange={handleChange}
               onBlur={handleBlur}
               placeholder="Enter license number"
               required
             />
-            {errors.licenseNumber && touched.licenseNumber && (
+            {errors.vendorLicense && touched.vendorLicense && (
               <div className="error-message">
                 <i className="bi bi-exclamation-circle"></i>
-                {errors.licenseNumber}
+                {errors.vendorLicense}
               </div>
             )}
           </div>
