@@ -3,7 +3,7 @@ import "../styles/FooterStyles.css"
 const FooterComponent = () => {
     return (
         <footer className="footers">
-            <div className="footer-header">
+            {/* <div className="footer-header">
                 <div className="footer-header-section">
                     <h3>About Us</h3>
                 </div>
@@ -13,7 +13,7 @@ const FooterComponent = () => {
                 <div className="footer-header-section">
                     <h3>Connect With Us</h3>
                 </div>
-            </div>
+            </div> */}
 
             <div className="footer-content">
                 <div className="footer-section">
