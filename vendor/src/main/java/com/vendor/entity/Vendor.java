@@ -28,6 +28,14 @@ public class Vendor {
     @Transient //this field won't be stored in the db
     private String status;
 
+    public Vendor(Long vendorId) {
+        this.id = vendorId;
+    }
+
+    public Vendor() {
+
+    }
+
     public String getStatus() {
         //calculate status based on expiryDate
         if(expiryDate != null && expiryDate.isBefore(LocalDate.now())) {
