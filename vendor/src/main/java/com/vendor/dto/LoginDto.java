@@ -9,9 +9,7 @@ public class LoginDto {
         this.password = password;
     }
 
-    public LoginDto() {
-
-    }
+    public LoginDto() {}
 
     public String getUsernameOrEmail() {
         return usernameOrEmail;
@@ -28,6 +26,10 @@ public class LoginDto {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    // Standard getters and setters
+
+    // Custom setters for username compatibility
     public void setUsername(String username) {
         this.usernameOrEmail = username;
     }
