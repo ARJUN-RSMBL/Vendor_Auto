@@ -28,4 +28,11 @@ public class LoginDto {
     public void setPassword(String password) {
         this.password = password;
     }
+    public void setUsername(String username) {
+        this.usernameOrEmail = username;
+    }
+
+    public String getUsername() {
+        return this.usernameOrEmail;
+    }
 }

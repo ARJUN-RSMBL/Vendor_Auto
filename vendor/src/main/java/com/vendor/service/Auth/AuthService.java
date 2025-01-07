@@ -10,9 +10,12 @@ import com.vendor.repository.RoleRepository;
 import com.vendor.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,17 +25,21 @@ import java.util.Set;
 
 @Service
 public class AuthService {
-    private UserRepository userRepository;
-    private RoleRepository roleRepository;
-    private PasswordEncoder passwordEncoder;
-    private AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+    public AuthService(UserRepository userRepository,
+                       RoleRepository roleRepository,
+                       PasswordEncoder passwordEncoder,
+                       AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
     }
+
 
     public String register(RegisterDto registerDto) {
 
@@ -76,32 +83,29 @@ public class AuthService {
 
 
     public RoleDto login(LoginDto loginDto) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginDto.getUsernameOrEmail(),
+                            loginDto.getPassword()
+                    )
+            );
 
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginDto.getUsernameOrEmail(),
-                loginDto.getPassword()
-        ));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            User user = userRepository.findByUsernameOrEmail(
+                    loginDto.getUsernameOrEmail(),
+                    loginDto.getUsernameOrEmail()
+            ).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Optional<User> userOptional = userRepository.findByUsernameOrEmail(loginDto.getUsernameOrEmail()
-                ,loginDto.getUsernameOrEmail());
+            String role = user.getRoles().stream()
+                    .findFirst()
+                    .map(Role::getName)
+                    .orElse("ROLE_USER");
 
-        String role = null;
-        if (userOptional.isPresent()){
-            User loggedInUser = userOptional.get();
-            Optional<Role> optionalRole = loggedInUser.getRoles().stream().findFirst();
-
-            if (optionalRole.isPresent()){
-                Role userRole = optionalRole.get();
-                role = userRole.getName();
-            }
-
+            return new RoleDto(role);
+        } catch (AuthenticationException e) {
+            throw new BadCredentialsException("Invalid username or password");
         }
-
-        RoleDto roleDto = new RoleDto();
-        roleDto.setRole(role);
-
-        return roleDto;
     }
 }
