@@ -48,4 +48,5 @@ public class VendorDocumentController {
                 .contentType(MediaType.parseMediaType(document.getContentType()))
                 .body(fileContent);
     }
+
 }

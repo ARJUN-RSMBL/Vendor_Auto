@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VendorDocumentService {
@@ -24,14 +25,38 @@ public class VendorDocumentService {
     @Autowired
     private DocumentStorageService storageService;
 
+    @Autowired
+    private DocumentTypeService documentTypeService;
+
+    @Autowired
+    private VendorService vendorService; // You'll need to inject VendorService
+
     public VendorDocument uploadDocument(MultipartFile file, Long vendorId,
                                          Long documentTypeId, LocalDate expiryDate) {
         try {
-            String filePath = storageService.storeFile(file, vendorId, documentTypeId.toString());
+            // Get vendor details
+            Vendor vendor = vendorService.getVendorById(vendorId);
+            if (vendor == null) {
+                throw new RuntimeException("Vendor not found");
+            }
+
+            // Get document type details
+            DocumentType docType = documentTypeService.getDocumentType(documentTypeId);
+            if (docType == null) {
+                throw new RuntimeException("Document type not found");
+            }
+
+            // Store file with vendor name and document type
+            String filePath = storageService.storeFile(
+                    file,
+                    vendorId,
+                    vendor.getName(),
+                    docType.getTypeName()  // assuming document type has a getName() method
+            );
 
             VendorDocument document = new VendorDocument();
-            document.setVendor(new Vendor(vendorId));
-            document.setDocumentType(new DocumentType(documentTypeId));
+            document.setVendor(vendor);
+            document.setDocumentType(docType);
             document.setOriginalFilename(file.getOriginalFilename());
             document.setStoredFilename(filePath.substring(filePath.lastIndexOf("/") + 1));
             document.setFilePath(filePath);

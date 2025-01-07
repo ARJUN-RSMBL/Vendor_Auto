@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/vendor")
@@ -33,7 +34,7 @@ public class VendorController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Vendor> getVendorById(@PathVariable Long id) {
-        Vendor getVendor = vendorService.getVendorById(id).orElse(null);
+        Vendor getVendor = vendorService.getVendorById(id);
         return new ResponseEntity<>(getVendor, HttpStatus.OK);
     }
 

@@ -10,7 +10,7 @@ public class DocumentType {
     private Long typeId;
     private String typeName;
     private String description;
-    private boolean isMandatory;
+    private boolean isMandatory = true;
 
     public DocumentType(Long documentTypeId) {
         this.typeId = documentTypeId;
@@ -48,7 +48,10 @@ public class DocumentType {
         return isMandatory;
     }
 
-    public void setMandatory(boolean mandatory) {
-        isMandatory = mandatory;
+    public void setMandatory(boolean isMandatory) {
+        this.isMandatory = isMandatory;
+    }
+    public void toggleMandatory() {
+        this.isMandatory = !this.isMandatory;
     }
 }

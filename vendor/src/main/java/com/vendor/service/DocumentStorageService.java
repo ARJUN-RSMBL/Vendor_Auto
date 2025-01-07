@@ -16,16 +16,17 @@ public class DocumentStorageService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    public String storeFile(MultipartFile file, Long vendorId, String documentType) throws IOException {
-        // Create directories if they don't exist
-        String vendorDir = uploadDir + "/vendor_" + vendorId;
+    public String storeFile(MultipartFile file, Long vendorId, String vendorName,
+                            String documentType) throws IOException {
+        // Create directory with vendor name and ID
+        String vendorDir = uploadDir + "/" + vendorName + "_" + vendorId;
         Files.createDirectories(Paths.get(vendorDir));
 
-        // Generate unique filename
+        // Generate filename with vendor name and document type
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         String originalFilename = file.getOriginalFilename();
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        String storedFilename = documentType + "_" + timestamp + extension;
+        String storedFilename = vendorName + "_" + documentType + "_" + timestamp + extension;
 
         // Store file
         Path targetLocation = Paths.get(vendorDir).resolve(storedFilename);

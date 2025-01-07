@@ -31,9 +31,9 @@ public class VendorService {
         return vendorRepository.save(vendor);
     }
 
-    public Optional<Vendor> getVendorById(Long id) {
-        return vendorRepository.findById(id);
-    }
+   public Vendor getVendorById(Long id) {
+        return vendorRepository.getVendorById(id);
+   }
 
     public Vendor getVendorByName(String vendorName) {
         Vendor vendor = vendorRepository.findByNameIgnoreCase(vendorName);

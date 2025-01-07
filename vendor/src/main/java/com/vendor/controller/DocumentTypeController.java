@@ -83,4 +83,24 @@ public class DocumentTypeController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    //method for toggling the mandatory field
+    @PatchMapping("/{typeId}/toggle-mandatory")
+    public ResponseEntity<?> toggleMandatory(@PathVariable Long typeId) {
+        try {
+            // Fetch the document type
+            DocumentType documentType = documentTypeService.getDocumentType(typeId);
+
+            // Toggle the isMandatory field
+            documentType.toggleMandatory();
+
+            // Save the updated document type
+            DocumentType updatedDocumentType = documentTypeService.updateDocumentType(typeId, documentType);
+
+            return ResponseEntity.ok(updatedDocumentType);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }
