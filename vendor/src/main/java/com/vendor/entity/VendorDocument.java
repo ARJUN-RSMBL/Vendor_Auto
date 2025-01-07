@@ -30,6 +30,23 @@ public class VendorDocument {
 
     // Getters and Setters
 
+
+    public VendorDocument(Long documentId, Vendor vendor, DocumentType documentType, String originalFilename, String storedFilename, String filePath, LocalDateTime uploadDate, LocalDate expiryDate, Long fileSize, String contentType, String status) {
+        this.documentId = documentId;
+        this.vendor = vendor;
+        this.documentType = documentType;
+        this.originalFilename = originalFilename;
+        this.storedFilename = storedFilename;
+        this.filePath = filePath;
+        this.uploadDate = uploadDate;
+        this.expiryDate = expiryDate;
+        this.fileSize = fileSize;
+        this.contentType = contentType;
+        this.status = status;
+    }
+
+    public VendorDocument() {}
+
     public Long getDocumentId() {
         return documentId;
     }

@@ -8,6 +8,15 @@ import java.time.LocalDate;
 @Entity
 public class Vendor {
 
+    public Vendor(Long id, String name, String vendorLicense, String email, LocalDate expiryDate, String status) {
+        this.id = id;
+        this.name = name;
+        this.vendorLicense = vendorLicense;
+        this.email = email;
+        this.expiryDate = expiryDate;
+        this.status = status;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
