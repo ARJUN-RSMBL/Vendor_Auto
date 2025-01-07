@@ -3,6 +3,7 @@ import VendorTableComponent from '../pages/VendorTableComponent'
 import LoginComponent from '../components/LoginComponent';
 import Home from '../components/Home';
 import VendorFormComponent from '../pages/VendorFormComponent';
+import RegisterComponent from '../components/RegisterComponent';
 
 
 function Routers() {
@@ -14,6 +15,7 @@ function Routers() {
                 <Route path='/form' element={<VendorFormComponent />}></Route>
                 <Route path='/vendors' element={<VendorTableComponent />}></Route>
                 <Route path='/login' element={<LoginComponent />}></Route>
+                <Route path='/register' element={<RegisterComponent />} />
             </Routes>
 
         </>

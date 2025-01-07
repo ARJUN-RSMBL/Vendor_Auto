@@ -1,7 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import '../styles/HeaderStyles.css';
+import { useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
 
 const HeaderComponent = () => {
+
+  const { isLoggedIn, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    // You might want to redirect to home or login page here
+  };
+
   return (
     <header>
       <nav className='navbar navbar-expand-md navbar-dark'>
@@ -38,10 +48,20 @@ const HeaderComponent = () => {
                 </NavLink>
               </li>
               <li className='nav-item'>
-                <NavLink to="/login" className="nav-link d-flex align-items-center">
-                  <i className="bi bi-box-arrow-in-right me-1"></i>
-                  Login
-                </NavLink>
+                {isLoggedIn ? (
+                  <button
+                    onClick={handleLogout}
+                    className="nav-link d-flex align-items-center border-0 bg-transparent"
+                  >
+                    <i className="bi bi-box-arrow-right me-1"></i>
+                    Logout
+                  </button>
+                ) : (
+                  <NavLink to="/login" className="nav-link d-flex align-items-center">
+                    <i className="bi bi-box-arrow-in-right me-1"></i>
+                    Login
+                  </NavLink>
+                )}
               </li>
             </ul>
           </div>

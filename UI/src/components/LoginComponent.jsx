@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import authService from '../services/authService';
+import { useAuth } from '../auth/AuthContext';
 
 
 const LoginComponent = () => {
@@ -7,10 +9,28 @@ const LoginComponent = () => {
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
+    const { login } = useAuth();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Add your login logic here
+        setError('');
+
+        try {
+            const response = await authService.login({
+                username,
+                password
+            });
+
+            // Use the login function from context
+            login(response.data.token);
+
+            // Redirect to dashboard or home page
+            navigate('/');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Login failed. Please try again.');
+        }
     };
 
     return (
@@ -19,8 +39,8 @@ const LoginComponent = () => {
                 <div className="row justify-content-center">
                     <div className="col-md-8 col-lg-6">
                         <div className="card border-0 shadow-lg rounded-4 overflow-hidden animate__animated animate__fadeIn">
-                            <div className="card-header text-white text-center py-4 border-0" 
-                                 style={{ background: 'linear-gradient(to right, #1a237e, #0d47a1)' }}>
+                            <div className="card-header text-white text-center py-4 border-0"
+                                style={{ background: 'linear-gradient(to right, #1a237e, #0d47a1)' }}>
                                 <h4 className="mb-0 fw-bold">
                                     <i className="bi bi-building me-2"></i>
                                     Vendor Login
@@ -127,6 +147,15 @@ const LoginComponent = () => {
                                             <i className={`bi bi-${platform.name}`}></i>
                                         </button>
                                     ))}
+                                </div>
+
+                                <div className="text-center mt-4">
+                                    <p className="mb-0">
+                                        Don't have an account?{' '}
+                                        <Link to="/register" className="text-primary text-decoration-none hover-link">
+                                            Sign up
+                                        </Link>
+                                    </p>
                                 </div>
                             </div>
                         </div>
