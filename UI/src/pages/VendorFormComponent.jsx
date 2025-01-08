@@ -1,26 +1,45 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../styles/FormStyles.css';
 import vendorService from '../services/vendorService';
+import { getAllDocumentTypes } from '../services/documentTypeService';
 
 function VendorFormComponent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [documentTypes, setDocumentTypes] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     expiryDate: '',
     vendorLicense: '',
-    licenseType: '',
-    licenseIssueDate: '',
-    licenseExpiryDate: '',
-    tradeLicenseAuthority: '',
-    documents: [{ file: null, expiryDate: '', documentName: '' }],
+    documents: [{ file: null, expiryDate: '', documentTypeId: '' }],
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
+  // Add useEffect to fetch document types when component mounts
+  useEffect(() => {
+    const fetchDocumentTypes = async () => {
+      try {
+        console.log('Starting to fetch document types');
+        const response = await getAllDocumentTypes();
+        console.log('Response received:', response);
+        
+        if (!response.data || response.data.length === 0) {
+          console.warn('No document types found');
+        }
+        
+        setDocumentTypes(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error('Error in component:', error);
+        toast.error('Failed to fetch document types');
+        setDocumentTypes([]);
+      }
+    };
 
+    fetchDocumentTypes();
+}, []);
 
   const handleBlur = (e) => {
     const { name } = e.target;
@@ -112,6 +131,7 @@ function VendorFormComponent() {
       toast.success('Vendor registered successfully!');
 
       // Reset form
+      // In handleSubmit function
       setFormData({
         name: '',
         email: '',
@@ -121,7 +141,7 @@ function VendorFormComponent() {
         licenseIssueDate: '',
         licenseExpiryDate: '',
         tradeLicenseAuthority: '',
-        documents: [{ file: null, expiryDate: '', documentName: '' }]
+        documents: [{ file: null, expiryDate: '', documentTypeId: '' }]
       });
       setTouched({});
       setErrors({});
@@ -280,19 +300,25 @@ function VendorFormComponent() {
           <div key={index} className="document-section">
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor={`documentName-${index}`} className="form-label">
+                <label htmlFor={`documentType-${index}`} className="form-label">
                   <i className="bi bi-file-text me-2"></i>
-                  Document Name
+                  Document Type
                 </label>
                 <div className="input-wrapper">
-                  <input
-                    type="text"
-                    id={`documentName-${index}`}
+                  <select
+                    id={`documentType-${index}`}
                     className="form-input"
-                    value={doc.documentName}
-                    onChange={(e) => handleDocumentChange(index, 'documentName', e.target.value)}
-                    placeholder="Enter document name"
-                  />
+                    value={doc.documentTypeId || ''}
+                    onChange={(e) => handleDocumentChange(index, 'documentTypeId', e.target.value)}
+                    required
+                  >
+                    <option value="">Select Document Type</option>
+                    {Array.isArray(documentTypes) && documentTypes.map(type => (
+                      <option key={type.typeId} value={type.typeId}>
+                        {type.typeName} {type.mandatory ? '*' : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -308,33 +334,27 @@ function VendorFormComponent() {
                     className="form-input"
                     onChange={(e) => handleFileChange(index, e)}
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    required={Array.isArray(documentTypes) &&
+                      documentTypes.find(t => t.typeId === doc.documentTypeId)?.mandatory}
                   />
                 </div>
               </div>
 
-              <div className={`form-group ${errors.expiryDate && touched.expiryDate ? 'has-error' : ''}`}>
-                <label htmlFor="expiryDate" className="form-label">
+              <div className="form-group">
+                <label htmlFor={`expiryDate-${index}`} className="form-label">
                   <i className="bi bi-calendar me-2"></i>
                   Expiry Date
                 </label>
                 <div className="input-wrapper">
                   <input
                     type="date"
-                    id="expiryDate"
-                    name="expiryDate"
-                    value={formData.expiryDate}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    required
+                    id={`expiryDate-${index}`}
                     className="form-input"
+                    value={doc.expiryDate}
+                    onChange={(e) => handleDocumentChange(index, 'expiryDate', e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
+                    required
                   />
-                  {errors.expiryDate && touched.expiryDate && (
-                    <div className="error-message">
-                      <i className="bi bi-exclamation-circle"></i>
-                      {errors.expiryDate}
-                    </div>
-                  )}
                 </div>
               </div>
 

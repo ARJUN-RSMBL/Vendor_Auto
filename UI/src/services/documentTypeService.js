@@ -4,16 +4,6 @@ import apiClient from './apiClient';
 
 const DOCUMENT_TYPE_API_URL = `${apiClient}/api/document-types`;
 
-axios.interceptors.request.use(function (config) {
-    
-    config.headers['Authorization'] = getToken();
-
-    return config;
-  }, function (error) {
-    // Do something with request error
-    return Promise.reject(error);
-  });
-
   // Create new document type
 export const createDocumentType = (documentType) => 
     axios.post(DOCUMENT_TYPE_API_URL, documentType);
@@ -31,8 +21,29 @@ export const getDocumentType = (typeId) =>
     axios.get(`${DOCUMENT_TYPE_API_URL}/${typeId}`);
 
 // Get all document types
-export const getAllDocumentTypes = () => 
-    axios.get(DOCUMENT_TYPE_API_URL);
+export const getAllDocumentTypes = async () => {
+    try {
+        console.log('Fetching document types...');
+        // Use apiClient directly instead of axios
+        const response = await apiClient.get('/api/document-types');
+        console.log('Raw response:', response);
+
+        // Check if we have valid data
+        if (response && response.data) {
+            return { data: response.data };
+        }
+        
+        return { data: [] };
+    } catch (error) {
+        console.error('Error fetching document types:', error);
+        if (error.response) {
+            console.error('Error status:', error.response.status);
+            console.error('Error data:', error.response.data);
+        }
+        return { data: [] };
+    }
+};
+
 
 // Get document type by name
 export const getDocumentTypeByName = (typeName) => 

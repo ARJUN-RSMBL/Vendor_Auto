@@ -1,5 +1,14 @@
-import apiClient from './apiClient';
+import axios from 'axios';
 
+const BASE_URL = 'http://localhost:8080';
+
+// Create a separate axios instance for auth
+const authClient = axios.create({
+    baseURL: BASE_URL,
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
 
 // export const registerAPICall = (registerObj) => axios.post(apiClient + '/register', registerObj);
 export const registerAPICall = (registerObj) => apiClient.post('/register', registerObj);
