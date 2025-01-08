@@ -25,11 +25,11 @@ function VendorFormComponent() {
         console.log('Starting to fetch document types');
         const response = await getAllDocumentTypes();
         console.log('Response received:', response);
-        
+
         if (!response.data || response.data.length === 0) {
           console.warn('No document types found');
         }
-        
+
         setDocumentTypes(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error('Error in component:', error);
@@ -39,7 +39,7 @@ function VendorFormComponent() {
     };
 
     fetchDocumentTypes();
-}, []);
+  }, []);
 
   const handleBlur = (e) => {
     const { name } = e.target;
@@ -60,21 +60,12 @@ function VendorFormComponent() {
 
   const validateForm = () => {
     const newErrors = {};
+    console.log('Starting validation with data:', formData);
 
-    // Only validate required fields
-    if (!formData.expiryDate) {
-      newErrors.expiryDate = 'Expiry date is required';
-    } else {
-      const selected = new Date(formData.expiryDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selected < today) {
-        newErrors.expiryDate = 'Expiry date cannot be in the past';
-      }
-    }
-
-    // Optional field validations (only if they have values)
-    if (formData.name && formData.name.trim().length < 3) {
+    // Required field validations
+    if (!formData.name?.trim()) {
+      newErrors.name = 'Name is required';
+    } else if (formData.name.trim().length < 3) {
       newErrors.name = 'Name must be at least 3 characters';
     }
 
@@ -82,69 +73,99 @@ function VendorFormComponent() {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    if (formData.vendorLicense && formData.vendorLicense.length < 5) {
-      newErrors.vendorLicense = 'License number must be at least 5 characters';
-    }
+    // Document validations
+    formData.documents.forEach((doc, index) => {
+      const documentErrors = {};
+      let hasError = false;
 
-    if (formData.licenseExpiryDate && formData.licenseIssueDate) {
-      const issueDate = new Date(formData.licenseIssueDate);
-      const expiryDate = new Date(formData.licenseExpiryDate);
-      if (expiryDate < issueDate) {
-        newErrors.licenseExpiryDate = 'License expiry date must be after issue date';
+      if (!doc.documentTypeId) {
+        documentErrors.documentTypeId = 'Document type is required';
+        hasError = true;
       }
-    }
 
+      if (!doc.expiryDate) {
+        documentErrors.expiryDate = 'Document expiry date is required';
+        hasError = true;
+      } else {
+        const selected = new Date(doc.expiryDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selected < today) {
+          documentErrors.expiryDate = 'Expiry date cannot be in the past';
+          hasError = true;
+        }
+      }
+
+      const selectedType = documentTypes.find(t => t.typeId === doc.documentTypeId);
+      if (selectedType?.mandatory && !doc.file) {
+        documentErrors.file = 'This document is mandatory';
+        hasError = true;
+      }
+
+      if (hasError) {
+        newErrors[`documents[${index}]`] = documentErrors;
+      }
+    });
+
+    console.log('Validation complete. Errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ expiryDate: true });
-
-    if (!validateForm()) {
-      toast.error('Please fix the errors in the form');
+    console.log('Form submission started');
+  
+    const isValid = validateForm();
+    console.log('Form validation result:', isValid);
+  
+    if (!isValid) {
+      toast.error('Please fill in all required fields correctly');
       return;
     }
-
+  
     setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
-
-      // Add regular form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key !== 'documents' && value && value.trim && value.trim() !== '') {
-          formDataToSend.append(key, value);
-        }
-      });
-
-      // Add documents
+      
+      // Add basic vendor fields
+      formDataToSend.append('name', formData.name.trim());
+      if (formData.email) {
+        formDataToSend.append('email', formData.email.trim());
+      }
+  
+      // Add documents - ensure all required fields are included
       formData.documents.forEach((doc, index) => {
-        if (doc.file) {
-          formDataToSend.append(`documents[${index}]file`, doc.file);
-          formDataToSend.append(`documents[${index}]expiryDate`, doc.expiryDate);
-          formDataToSend.append(`documents[${index}]documentName`, doc.documentName);
+        if (doc.documentTypeId) {
+          // Convert date to proper format (YYYY-MM-DD)
+          const formattedDate = new Date(doc.expiryDate).toISOString().split('T')[0];
+          
+          formDataToSend.append(`documents[${index}].documentTypeId`, doc.documentTypeId);
+          formDataToSend.append(`documents[${index}].expiryDate`, formattedDate);
+          if (doc.file) {
+            formDataToSend.append(`documents[${index}].file`, doc.file);
+          }
         }
       });
-
-      await vendorService.createVendor(formDataToSend);
+  
+      // Log the FormData contents for debugging
+      for (let pair of formDataToSend.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+  
+      console.log('Submitting form data...');
+      const response = await vendorService.createVendor(formDataToSend);
+      console.log('Submit response:', response);
+      
       toast.success('Vendor registered successfully!');
-
-      // Reset form
-      // In handleSubmit function
+      // Reset form after successful submission
       setFormData({
         name: '',
         email: '',
-        expiryDate: '',
-        vendorLicense: '',
-        licenseType: '',
-        licenseIssueDate: '',
-        licenseExpiryDate: '',
-        tradeLicenseAuthority: '',
         documents: [{ file: null, expiryDate: '', documentTypeId: '' }]
       });
-      setTouched({});
-      setErrors({});
+      
     } catch (error) {
       let errorMessage = 'Failed to register vendor';
       if (error.response) {
@@ -295,32 +316,37 @@ function VendorFormComponent() {
         <div className="form-section-divider">
           <h3 className="section-title">Documents</h3>
         </div>
-
         {formData.documents.map((doc, index) => (
-          <div key={index} className="document-section">
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor={`documentType-${index}`} className="form-label">
-                  <i className="bi bi-file-text me-2"></i>
-                  Document Type
-                </label>
-                <div className="input-wrapper">
-                  <select
-                    id={`documentType-${index}`}
-                    className="form-input"
-                    value={doc.documentTypeId || ''}
-                    onChange={(e) => handleDocumentChange(index, 'documentTypeId', e.target.value)}
-                    required
-                  >
-                    <option value="">Select Document Type</option>
-                    {Array.isArray(documentTypes) && documentTypes.map(type => (
-                      <option key={type.typeId} value={type.typeId}>
-                        {type.typeName} {type.mandatory ? '*' : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+  <div key={index} className="document-section">
+    <div className="form-row">
+      <div className="form-group">
+        <label htmlFor={`documentType-${index}`} className="form-label">
+          <i className="bi bi-file-text me-2"></i>
+          Document Type
+        </label>
+        <div className="input-wrapper">
+          <select
+            id={`documentType-${index}`}
+            className={`form-input ${errors[`documents[${index}]`]?.documentTypeId ? 'error' : ''}`}
+            value={doc.documentTypeId || ''}
+            onChange={(e) => handleDocumentChange(index, 'documentTypeId', e.target.value)}
+            required
+          >
+            <option value="">Select Document Type</option>
+            {documentTypes.map(type => (
+              <option key={type.typeId} value={type.typeId}>
+                {type.typeName} {type.mandatory ? '*' : ''}
+              </option>
+            ))}
+          </select>
+          {touched[`documents[${index}]`] && errors[`documents[${index}]`]?.documentTypeId && (
+            <div className="error-message">
+              <i className="bi bi-exclamation-circle"></i>
+              {errors[`documents[${index}]`].documentTypeId}
+            </div>
+          )}
+        </div>
+      </div>
 
               <div className="form-group">
                 <label htmlFor={`document-${index}`} className="form-label">
