@@ -1,4 +1,5 @@
 import axios from 'axios';
+import apiClient from './apiClient';
 
 const BASE_URL = 'http://localhost:8080';
 
