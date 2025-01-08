@@ -1,37 +1,39 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import authService from '../services/authService';
-import { useAuth } from '../auth/AuthContext';
+import { loginAPICall, saveLoggedInUser, storeToken } from '../services/authService';
 
 
 const LoginComponent = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const navigate = useNavigate();
-    const { login } = useAuth();
 
-    const handleSubmit = async (e) => {
+    const navigator = useNavigate();
+
+    async function handleLoginForm(e){
+
         e.preventDefault();
-        setError('');
 
-        try {
-            const response = await authService.login({
-                username,
-                password
-            });
+        await loginAPICall(username, password).then((response) => {
+            console.log(response.data);
 
-            // Use the login function from context
-            login(response.data.token);
+            const token = 'Basic ' + window.btoa(username + ":" + password);
+            storeToken(token);
 
-            // Redirect to dashboard or home page
-            navigate('/');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Login failed. Please try again.');
-        }
-    };
+            const role = response.data.role;
+
+            saveLoggedInUser(username,role);
+            navigator("/services")
+
+            window.location.reload(false);
+        }).catch(error => {
+            console.error(error);
+        })
+
+    }
+
+
 
     return (
         <div className="min-vh-100 d-flex align-items-center py-5" style={{ background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)' }}>
@@ -47,7 +49,7 @@ const LoginComponent = () => {
                                 </h4>
                             </div>
                             <div className="card-body p-md-5">
-                                <form onSubmit={handleSubmit}>
+                                <form >
                                     <div className="mb-4">
                                         <label className="form-label fw-semibold">
                                             <i className="bi bi-person me-2"></i>
@@ -60,9 +62,9 @@ const LoginComponent = () => {
                                             <input
                                                 type="text"
                                                 className="form-control border-start-0"
-                                                placeholder="Enter your username or email"
+                                                placeholder="Enter your username"
                                                 value={username}
-                                                onChange={(e) => setUsername(e.target.value)}
+                                                onChange={ (e) => setUsername(e.target.value)}
                                                 required
                                             />
                                         </div>
@@ -117,6 +119,7 @@ const LoginComponent = () => {
                                         <button
                                             type="submit"
                                             className="btn btn-primary btn-lg"
+                                            onClick={ (e) => handleLoginForm(e)}
                                         >
                                             <i className="bi bi-box-arrow-in-right me-2"></i>
                                             Sign In

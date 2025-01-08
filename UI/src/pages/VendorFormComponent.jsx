@@ -117,7 +117,24 @@ function VendorFormComponent() {
       setTouched({});
       setErrors({});
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to register vendor');
+      let errorMessage = 'Failed to register vendor';
+      if (error.response) {
+        // Handle specific HTTP error responses
+        switch (error.response.status) {
+          case 400:
+            errorMessage = error.response.data.message || 'Invalid vendor data';
+            break;
+          case 401:
+            errorMessage = 'Please login to continue';
+            break;
+          case 403:
+            errorMessage = 'You do not have permission to register vendors';
+            break;
+          default:
+            errorMessage = error.response.data.message || errorMessage;
+        }
+      }
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

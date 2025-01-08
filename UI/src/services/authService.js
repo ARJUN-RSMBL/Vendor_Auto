@@ -39,7 +39,7 @@ export const logout = () => {
 
 export const isAdminUser = () => {
     let role  = sessionStorage.getItem("role");
-    if(role !=null && role == "ADMIN"){
+    if(role != null && role == "ADMIN"){  // <- Using == instead of ===
         return true
     }else {
         return false

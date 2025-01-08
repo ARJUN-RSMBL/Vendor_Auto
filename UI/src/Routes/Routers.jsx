@@ -1,10 +1,12 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import VendorTableComponent from '../pages/VendorTableComponent'
 import LoginComponent from '../components/LoginComponent';
 import Home from '../components/Home';
 import VendorFormComponent from '../pages/VendorFormComponent';
 import RegisterComponent from '../components/RegisterComponent';
 import { isAdminUser, isUserLoggedIn } from '../services/authService';
+import PropTypes from 'prop-types'
+import WelcomeAdminComponent from '../components/WelcomeAdminComponent'
 
 
 function Routers() {

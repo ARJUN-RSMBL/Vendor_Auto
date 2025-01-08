@@ -1,54 +1,39 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import authService from '../services/authService';
+import { registerAPICall } from '../services/authService';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const RegisterComponent = () => {
-    const [formData, setFormData] = useState({
-        name: '',
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: '', // Keep this for frontend validation only
-    });
+
+    const [name, setName] = useState('')
+    const [username, setUsername] = useState('')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
-    };
 
-    const handleSubmit = async (e) => {
+    function handleRegistrationForm(e) {
+
         e.preventDefault();
-        setError('');
 
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            return;
-        }
+        const register = { name, username, email, password }
 
-        try {
-            // Only send the fields that match the backend DTO
-            const registrationData = {
-                name: formData.name,
-                username: formData.username,
-                email: formData.email,
-                password: formData.password,
-                role: 'ROLE_VENDOR'
-            };
+        console.log(register);
 
-            await authService.register(registrationData);
-            navigate('/login');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
-        }
-    };
+        registerAPICall(register).then((response) => {
+            console.log(response.data);
+            toast.success('Registration successful!');
+        }).catch(error => {
+            console.error(error);
+            toast.error('Registration failed. Please try again.');
+        })
+    }
+
 
     return (
         <div className="min-vh-100 d-flex align-items-center py-5" style={{ background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)' }}>
@@ -64,7 +49,7 @@ const RegisterComponent = () => {
                                 </h4>
                             </div>
                             <div className="card-body p-md-5">
-                                <form onSubmit={handleSubmit}>
+                                <form >
                                     {error && (
                                         <div className="alert alert-danger" role="alert">
                                             {error}
@@ -86,13 +71,13 @@ const RegisterComponent = () => {
                                                 name="name"
                                                 className="form-control border-start-0"
                                                 placeholder="Enter company name"
-                                                value={formData.name}
-                                                onChange={handleChange}
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
                                                 required
                                             />
                                         </div>
                                     </div>
-
+                                    <ToastContainer position="bottom-right" autoClose={3000} />
                                     {/* Username Field */}
                                     <div className="mb-4">
                                         <label className="form-label fw-semibold">
@@ -108,8 +93,8 @@ const RegisterComponent = () => {
                                                 name="username"
                                                 className="form-control border-start-0"
                                                 placeholder="Enter username"
-                                                value={formData.username}
-                                                onChange={handleChange}
+                                                value={username}
+                                                onChange={(e) => setUsername(e.target.value)}
                                                 required
                                             />
                                         </div>
@@ -130,8 +115,8 @@ const RegisterComponent = () => {
                                                 name="email"
                                                 className="form-control border-start-0"
                                                 placeholder="Enter email address"
-                                                value={formData.email}
-                                                onChange={handleChange}
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 required
                                             />
                                         </div>
@@ -152,8 +137,8 @@ const RegisterComponent = () => {
                                                 name="password"
                                                 className="form-control border-start-0 border-end-0"
                                                 placeholder="Enter password"
-                                                value={formData.password}
-                                                onChange={handleChange}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
                                                 required
                                             />
                                             <button
@@ -181,8 +166,8 @@ const RegisterComponent = () => {
                                                 name="confirmPassword"
                                                 className="form-control border-start-0 border-end-0"
                                                 placeholder="Confirm password"
-                                                value={formData.confirmPassword}
-                                                onChange={handleChange}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
                                                 required
                                             />
                                             <button
@@ -199,6 +184,7 @@ const RegisterComponent = () => {
                                         <button
                                             type="submit"
                                             className="btn btn-primary btn-lg"
+                                            onClick={(e) => handleRegistrationForm(e)}
                                         >
                                             <i className="bi bi-person-plus me-2"></i>
                                             Register
