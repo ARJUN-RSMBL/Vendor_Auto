@@ -8,27 +8,41 @@ const LoginComponent = () => {
     const [password, setPassword] = useState('')
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const navigator = useNavigate();
 
-    async function handleLoginForm(e){
+    async function handleLoginForm(e) {
 
         e.preventDefault();
+        setErrorMessage(''); // Clear any previous error messages
 
+        // Create the Basic Auth token before making the request
+        // const token = 'Basic ' + window.btoa(username + ":" + password);
+
+        // Add Authorization header to the request
         await loginAPICall(username, password).then((response) => {
             console.log(response.data);
 
+            // Create and store the token after successful login
             const token = 'Basic ' + window.btoa(username + ":" + password);
             storeToken(token);
 
             const role = response.data.role;
-
-            saveLoggedInUser(username,role);
-            navigator("/services")
-
+            saveLoggedInUser(username, role);
+            navigator("/welcome")
             window.location.reload(false);
         }).catch(error => {
-            console.error(error);
+            console.error(error); if (error.response) {
+                // Server responded with error
+                setErrorMessage(error.response.data.message || 'Invalid username or password');
+            } else if (error.request) {
+                // Request made but no response
+                setErrorMessage('Unable to connect to the server');
+            } else {
+                // Other errors
+                setErrorMessage('An error occurred. Please try again.');
+            }
         })
 
     }
@@ -49,7 +63,13 @@ const LoginComponent = () => {
                                 </h4>
                             </div>
                             <div className="card-body p-md-5">
-                                <form >
+                                <form>
+                                    {errorMessage && (
+                                        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                                            {errorMessage}
+                                            <button type="button" className="btn-close" onClick={() => setErrorMessage('')} aria-label="Close"></button>
+                                        </div>
+                                    )}
                                     <div className="mb-4">
                                         <label className="form-label fw-semibold">
                                             <i className="bi bi-person me-2"></i>
@@ -64,7 +84,7 @@ const LoginComponent = () => {
                                                 className="form-control border-start-0"
                                                 placeholder="Enter your username"
                                                 value={username}
-                                                onChange={ (e) => setUsername(e.target.value)}
+                                                onChange={(e) => setUsername(e.target.value)}
                                                 required
                                             />
                                         </div>
@@ -119,7 +139,7 @@ const LoginComponent = () => {
                                         <button
                                             type="submit"
                                             className="btn btn-primary btn-lg"
-                                            onClick={ (e) => handleLoginForm(e)}
+                                            onClick={(e) => handleLoginForm(e)}
                                         >
                                             <i className="bi bi-box-arrow-in-right me-2"></i>
                                             Sign In

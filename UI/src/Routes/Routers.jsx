@@ -37,7 +37,7 @@ function Routers() {
         <>
             <Routes>
 
-                {isAdmin && <Route path='/' element={<WelcomeAdminComponent />} />}
+                {isAdmin && <Route path='/welcome' element={<WelcomeAdminComponent />} />}
                 {!isAdmin && <Route path='/' element={<Home />} />}
 
                 <Route path='/register' element={<AuthenticatedRoute>
