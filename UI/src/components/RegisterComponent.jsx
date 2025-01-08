@@ -45,7 +45,7 @@ const RegisterComponent = () => {
                                 style={{ background: 'linear-gradient(to right, #1a237e, #0d47a1)' }}>
                                 <h4 className="mb-0 fw-bold">
                                     <i className="bi bi-building me-2"></i>
-                                    Vendor Registration
+                                    User Registration
                                 </h4>
                             </div>
                             <div className="card-body p-md-5">

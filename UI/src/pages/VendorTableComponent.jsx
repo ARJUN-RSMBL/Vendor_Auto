@@ -14,8 +14,8 @@ function VendorTableComponent() {
 
   const fetchVendors = async () => {
     try {
-      const response = await vendorService.getAllVendors();
-      setVendors(response.data);
+      const vendors = await vendorService.getAllVendors(); // Remove .data
+      setVendors(vendors);
     } catch (error) {
       console.error('Error fetching vendors:', error);
       toast.error('Failed to fetch vendors');

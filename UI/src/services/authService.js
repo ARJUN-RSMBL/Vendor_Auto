@@ -1,4 +1,3 @@
-import axios from "axios";
 import apiClient from './apiClient';
 
 
@@ -11,7 +10,14 @@ export const loginAPICall = (usernameOrEmail, password) => apiClient.post('/api/
     { usernameOrEmail, password }
 );
 
-export const storeToken = (token) => localStorage.setItem("token", token);
+// export const storeToken = (token) => localStorage.setItem("token", token);
+export const storeToken = (token) => {
+    if (!token || typeof token !== 'string') {
+        console.warn('Invalid token format');
+        return;
+    }
+    localStorage.setItem("token", token);
+}
 
 export const getToken = () => localStorage.getItem("token");
 
@@ -44,9 +50,9 @@ export const logout = () => {
 
 export const isAdminUser = () => {
     let role  = sessionStorage.getItem("role");
-    if(role != null && role == "ADMIN"){  // <- Using == instead of ===
-        return true
-    }else {
-        return false
+    if(role != null && role === "ROLE_ADMIN") {  // Changed == to === and 'ADMIN' to 'ROLE_ADMIN'
+        return true;
+    } else {
+        return false;
     }
 }

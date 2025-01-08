@@ -1,35 +1,29 @@
 import { NavLink } from 'react-router-dom';
 import '../styles/HeaderStyles.css';
-import { isUserLoggedIn, logout } from '../services/authService'
+import { isAdminUser, isUserLoggedIn, logout } from '../services/authService'
 import { useNavigate } from 'react-router-dom'
 
 const HeaderComponent = () => {
 
   const isAuth = isUserLoggedIn();
 
-  // const isAdmin = isAdminUser();
+  const isAdmin = isAdminUser();
 
   const navigator = useNavigate();
 
   function handleLogout() {
     logout();
-    navigator('/login')
+    navigator('/')
   }
 
   return (
     <header>
       <nav className='navbar navbar-expand-md navbar-dark'>
         <div className='container'>
-          {(!isAuth) ?
-            < NavLink to="/" className="navbar-brand d-flex align-items-center">
-              <i className="bi bi-building me-2"></i>
-              Vendor Automation Demo
-            </NavLink> :
-            < NavLink to="/welcome" className="navbar-brand d-flex align-items-center">
-              <i className="bi bi-building me-2"></i>
-              Vendor Automation Demo
-            </NavLink>
-          }
+          <NavLink to={isAuth ? (isAdmin ? "/welcome" : "/") : "/"} className="navbar-brand d-flex align-items-center">
+            <i className="bi bi-building me-2"></i>
+            Vendor Automation Demo
+          </NavLink>
 
           <button
             className='navbar-toggler'

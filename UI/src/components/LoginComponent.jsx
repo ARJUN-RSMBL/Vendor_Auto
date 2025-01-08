@@ -24,14 +24,19 @@ const LoginComponent = () => {
         await loginAPICall(username, password).then((response) => {
             console.log(response.data);
 
-            // Create and store the token after successful login
             const token = 'Basic ' + window.btoa(username + ":" + password);
             storeToken(token);
 
             const role = response.data.role;
             saveLoggedInUser(username, role);
-            navigator("/welcome")
-            window.location.reload(false);
+
+            // Modify this section
+            if (role === 'ROLE_ADMIN') {
+                navigator("/welcome");
+            } else {
+                navigator("/");
+            }
+            window.location.reload(false)
         }).catch(error => {
             console.error(error); if (error.response) {
                 // Server responded with error

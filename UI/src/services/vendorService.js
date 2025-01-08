@@ -1,19 +1,38 @@
 import apiClient from './apiClient';
 
 const vendorService = {
+
     // Get all vendors
-    getAllVendors: () => {
-        return apiClient.get('/vendor');
+    getAllVendors: async () => {
+        try {
+            const response = await apiClient.get('/vendor');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching vendors:', error);
+            throw error;
+        }
     },
 
     // Get vendor by ID
-    getVendorById: (id) => {
-        return apiClient.get(`/vendor/${id}`);
+    getVendorById: async (id) => {
+        try {
+            const response = await apiClient.get(`/vendor/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching vendor:', error);
+            throw error;
+        }
     },
 
     // Create new vendor
-    createVendor: (vendorData) => {
-        return apiClient.post('/vendor', vendorData);
+    createVendor: async (vendorData) => {
+        try {
+            const response = await apiClient.post('/vendor', vendorData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating vendor:', error);
+            throw error;
+        }
     },
 
     // Update vendor
