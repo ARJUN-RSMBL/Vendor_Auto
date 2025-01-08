@@ -7,6 +7,7 @@ import RegisterComponent from '../components/RegisterComponent';
 import { isAdminUser, isUserLoggedIn } from '../services/authService';
 import PropTypes from 'prop-types'
 import WelcomeAdminComponent from '../components/WelcomeAdminComponent'
+import DocumentTypeManagement from '../pages/DocumentTypeManagement';
 
 
 function Routers() {
@@ -68,6 +69,11 @@ function Routers() {
             <Route path='/form' element={
                 <AuthenticatedRoute>
                     <VendorFormComponent />
+                </AuthenticatedRoute>
+            } />
+            <Route path='/document-types' element={
+                <AuthenticatedRoute>
+                    <DocumentTypeManagement />
                 </AuthenticatedRoute>
             } />
             <Route path='/vendors' element={

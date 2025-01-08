@@ -65,6 +65,15 @@ const HeaderComponent = () => {
                 </li>
               }
               {
+                isAuth && isAdmin &&
+                <li className='nav-item'>
+                  <NavLink to="/document-types" className="nav-link d-flex align-items-center">
+                    <i className="bi bi-file-earmark-text me-1"></i>
+                    Document Types
+                  </NavLink>
+                </li>
+              }
+              {
                 isAuth &&
                 <li className='nav-item'>
                   <NavLink to="/login" className="nav-link d-flex align-items-center border-0 bg-transparent"
