@@ -11,7 +11,11 @@ import {
 function DocumentTypeManagement() {
     const [documentTypes, setDocumentTypes] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [newType, setNewType] = useState({ typeName: '', mandatory: false });
+    const [newType, setNewType] = useState({ 
+        typeName: '', 
+        description: '', // Add description to initial state
+        mandatory: false 
+      });
     const [editingType, setEditingType] = useState(null);
 
     useEffect(() => {
@@ -33,31 +37,37 @@ function DocumentTypeManagement() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            if (editingType) {
-                await updateDocumentType(editingType.typeId, {
-                    typeName: newType.typeName,
-                    mandatory: newType.mandatory
-                });
-                toast.success('Document type updated successfully');
-            } else {
-                await createDocumentType({
-                    typeName: newType.typeName,
-                    mandatory: newType.mandatory
-                });
-                toast.success('Document type created successfully');
-            }
-            setNewType({ typeName: '', mandatory: false });
-            setEditingType(null);
-            fetchDocumentTypes();
+          if (editingType) {
+            await updateDocumentType(editingType.typeId, {
+              typeName: newType.typeName,
+              description: newType.description, // Add description to update
+              mandatory: newType.mandatory
+            });
+            toast.success('Document type updated successfully');
+          } else {
+            await createDocumentType({
+              typeName: newType.typeName,
+              description: newType.description, // Add description to create
+              mandatory: newType.mandatory
+            });
+            toast.success('Document type created successfully');
+          }
+          setNewType({ typeName: '', description: '', mandatory: false }); // Reset with description
+          setEditingType(null);
+          fetchDocumentTypes();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Operation failed');
+          toast.error(error.response?.data?.message || 'Operation failed');
         }
-    };
+      };
 
-    const handleEdit = (type) => {
+      const handleEdit = (type) => {
         setEditingType(type);
-        setNewType({ typeName: type.typeName, mandatory: type.mandatory });
-    };
+        setNewType({ 
+          typeName: type.typeName, 
+          description: type.description, // Add description when editing
+          mandatory: type.mandatory 
+        });
+      };
 
     const handleDelete = async (typeId) => {
         if (window.confirm('Are you sure you want to delete this document type?')) {
@@ -89,7 +99,7 @@ function DocumentTypeManagement() {
 
             <form onSubmit={handleSubmit} className="mb-4">
                 <div className="row g-3">
-                    <div className="col-md-6">
+                    <div className="col-md-4">
                         <input
                             type="text"
                             className="form-control"
@@ -99,7 +109,16 @@ function DocumentTypeManagement() {
                             required
                         />
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-4">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Description"
+                            value={newType.description}
+                            onChange={(e) => setNewType({ ...newType, description: e.target.value })}
+                        />
+                    </div>
+                    <div className="col-md-2">
                         <div className="form-check">
                             <input
                                 type="checkbox"
@@ -113,7 +132,7 @@ function DocumentTypeManagement() {
                             </label>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-2">
                         <button type="submit" className="btn btn-primary">
                             {editingType ? 'Update' : 'Add'} Document Type
                         </button>
@@ -128,6 +147,7 @@ function DocumentTypeManagement() {
                     <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Description</th> {/* Add description column */}
                             <th>Mandatory</th>
                             <th>Actions</th>
                         </tr>
@@ -136,6 +156,7 @@ function DocumentTypeManagement() {
                         {documentTypes.map((type) => (
                             <tr key={type.typeId}>
                                 <td>{type.typeName}</td>
+                                <td>{type.description}</td> {/* Add description cell */}
                                 <td>
                                     <button
                                         className={`btn btn-sm ${type.mandatory ? 'btn-success' : 'btn-secondary'}`}
