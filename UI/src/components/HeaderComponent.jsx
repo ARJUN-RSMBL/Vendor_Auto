@@ -14,6 +14,7 @@ const HeaderComponent = () => {
   function handleLogout() {
     logout();
     navigator('/')
+    window.location.reload(true)
   }
 
   return (
