@@ -15,11 +15,12 @@ function VendorFormComponent() {
     licenseIssueDate: '',
     licenseExpiryDate: '',
     tradeLicenseAuthority: '',
+    documents: [{ file: null, expiryDate: '', documentName: '' }],
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
-  
+
 
   const handleBlur = (e) => {
     const { name } = e.target;
@@ -40,7 +41,7 @@ function VendorFormComponent() {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Only validate required fields
     if (!formData.expiryDate) {
       newErrors.expiryDate = 'Expiry date is required';
@@ -80,7 +81,7 @@ function VendorFormComponent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ expiryDate: true }); // Only mark required field as touched
+    setTouched({ expiryDate: true });
 
     if (!validateForm()) {
       toast.error('Please fix the errors in the form');
@@ -89,20 +90,27 @@ function VendorFormComponent() {
 
     setIsSubmitting(true);
     try {
-      // Create a new object with only non-empty values
-      const submitData = Object.entries(formData).reduce((acc, [key, value]) => {
-        if (value && value.trim && value.trim() !== '') {
-          acc[key] = value;
+      const formDataToSend = new FormData();
+
+      // Add regular form fields
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key !== 'documents' && value && value.trim && value.trim() !== '') {
+          formDataToSend.append(key, value);
         }
-        return acc;
-      }, {});
+      });
 
-      // Ensure expiryDate is always included
-      submitData.expiryDate = formData.expiryDate;
+      // Add documents
+      formData.documents.forEach((doc, index) => {
+        if (doc.file) {
+          formDataToSend.append(`documents[${index}]file`, doc.file);
+          formDataToSend.append(`documents[${index}]expiryDate`, doc.expiryDate);
+          formDataToSend.append(`documents[${index}]documentName`, doc.documentName);
+        }
+      });
 
-      await vendorService.createVendor(submitData);
+      await vendorService.createVendor(formDataToSend);
       toast.success('Vendor registered successfully!');
-      
+
       // Reset form
       setFormData({
         name: '',
@@ -112,7 +120,8 @@ function VendorFormComponent() {
         licenseType: '',
         licenseIssueDate: '',
         licenseExpiryDate: '',
-        tradeLicenseAuthority: ''
+        tradeLicenseAuthority: '',
+        documents: [{ file: null, expiryDate: '', documentName: '' }]
       });
       setTouched({});
       setErrors({});
@@ -140,14 +149,45 @@ function VendorFormComponent() {
     }
   };
 
+  const handleDocumentChange = (index, field, value) => {
+    const newDocuments = [...formData.documents];
+    newDocuments[index] = {
+      ...newDocuments[index],
+      [field]: value
+    };
+    setFormData(prev => ({
+      ...prev,
+      documents: newDocuments
+    }));
+  };
+
+  const handleFileChange = (index, e) => {
+    const file = e.target.files[0];
+    handleDocumentChange(index, 'file', file);
+  };
+
+  const addDocumentField = () => {
+    setFormData(prev => ({
+      ...prev,
+      documents: [...prev.documents, { file: null, expiryDate: '', documentName: '' }]
+    }));
+  };
+
+  const removeDocumentField = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: prev.documents.filter((_, i) => i !== index)
+    }));
+  };
+
   return (
     <div className="iqama-form-container">
       <div className="form-header">
         <div className="form-icon-wrapper">
           <i className="bi bi-person-plus-fill"></i>
         </div>
-        <h2 className="form-title">Vendor Registration</h2>
-        <p className="form-subtitle">Enter vendor details below</p>
+        <h2 className="form-title">Vendor Documents</h2>
+        <p className="form-subtitle">Enter details below</p>
       </div>
 
       <form className="iqama-form" onSubmit={handleSubmit} noValidate>
@@ -203,7 +243,7 @@ function VendorFormComponent() {
           </div>
         </div>
 
-        <div className={`form-group ${errors.expiryDate && touched.expiryDate ? 'has-error' : ''}`}>
+        {/* <div className={`form-group ${errors.expiryDate && touched.expiryDate ? 'has-error' : ''}`}>
           <label htmlFor="expiryDate" className="form-label">
             <i className="bi bi-calendar me-2"></i>
             Expiry Date
@@ -227,146 +267,98 @@ function VendorFormComponent() {
               </div>
             )}
           </div>
-        </div>
+        </div> */}
 
-        {/* License Information Section */}
+
+
+        {/* Documents Section */}
         <div className="form-section-divider">
-          <h3 className="section-title">License Information</h3>
+          <h3 className="section-title">Documents</h3>
         </div>
 
-        <div className={`form-group ${errors.vendorLicense && touched.vendorLicense ? 'has-error' : ''}`}>
-          <label htmlFor="vendorLicense" className="form-label">
-            <i className="bi bi-upc-scan me-2"></i>
-            License Number
-          </label>
-          <div className="input-wrapper">
-            <input
-              type="text"
-              id="vendorLicense"
-              name="vendorLicense"
-              className="form-input"
-              value={formData.vendorLicense}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Enter license number"
-              required
-            />
-            {errors.vendorLicense && touched.vendorLicense && (
-              <div className="error-message">
-                <i className="bi bi-exclamation-circle"></i>
-                {errors.vendorLicense}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={`form-group ${errors.licenseType && touched.licenseType ? 'has-error' : ''}`}>
-          <label htmlFor="licenseType" className="form-label">
-            <i className="bi bi-card-text me-2"></i>
-            License Type
-          </label>
-          <div className="input-wrapper">
-            <select
-              id="licenseType"
-              name="licenseType"
-              className="form-input"
-              value={formData.licenseType}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              // required
-            >
-              <option value="">Select license type</option>
-              <option value="trade">Trade License</option>
-              <option value="professional">Professional License</option>
-              <option value="commercial">Commercial License</option>
-              <option value="industrial">Industrial License</option>
-            </select>
-            {errors.licenseType && touched.licenseType && (
-              <div className="error-message">
-                <i className="bi bi-exclamation-circle"></i>
-                {errors.licenseType}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className={`form-group ${errors.licenseIssueDate && touched.licenseIssueDate ? 'has-error' : ''}`}>
-            <label htmlFor="licenseIssueDate" className="form-label">
-              <i className="bi bi-calendar-plus me-2"></i>
-              Issue Date
-            </label>
-            <div className="input-wrapper">
-              <input
-                type="date"
-                id="licenseIssueDate"
-                name="licenseIssueDate"
-                className="form-input"
-                value={formData.licenseIssueDate}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                // required
-              />
-              {errors.licenseIssueDate && touched.licenseIssueDate && (
-                <div className="error-message">
-                  <i className="bi bi-exclamation-circle"></i>
-                  {errors.licenseIssueDate}
+        {formData.documents.map((doc, index) => (
+          <div key={index} className="document-section">
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor={`documentName-${index}`} className="form-label">
+                  <i className="bi bi-file-text me-2"></i>
+                  Document Name
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    id={`documentName-${index}`}
+                    className="form-input"
+                    value={doc.documentName}
+                    onChange={(e) => handleDocumentChange(index, 'documentName', e.target.value)}
+                    placeholder="Enter document name"
+                  />
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor={`document-${index}`} className="form-label">
+                  <i className="bi bi-upload me-2"></i>
+                  Upload Document
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="file"
+                    id={`document-${index}`}
+                    className="form-input"
+                    onChange={(e) => handleFileChange(index, e)}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  />
+                </div>
+              </div>
+
+              <div className={`form-group ${errors.expiryDate && touched.expiryDate ? 'has-error' : ''}`}>
+                <label htmlFor="expiryDate" className="form-label">
+                  <i className="bi bi-calendar me-2"></i>
+                  Expiry Date
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="date"
+                    id="expiryDate"
+                    name="expiryDate"
+                    value={formData.expiryDate}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                    className="form-input"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                  {errors.expiryDate && touched.expiryDate && (
+                    <div className="error-message">
+                      <i className="bi bi-exclamation-circle"></i>
+                      {errors.expiryDate}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {index > 0 && (
+                <button
+                  type="button"
+                  className="remove-document-btn"
+                  onClick={() => removeDocumentField(index)}
+                >
+                  <i className="bi bi-trash"></i>
+                </button>
               )}
             </div>
           </div>
+        ))}
 
-          <div className={`form-group ${errors.licenseExpiryDate && touched.licenseExpiryDate ? 'has-error' : ''}`}>
-            <label htmlFor="licenseExpiryDate" className="form-label">
-              <i className="bi bi-calendar-x me-2"></i>
-              Expiry Date
-            </label>
-            <div className="input-wrapper">
-              <input
-                type="date"
-                id="licenseExpiryDate"
-                name="licenseExpiryDate"
-                className="form-input"
-                value={formData.licenseExpiryDate}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                // required
-              />
-              {errors.licenseExpiryDate && touched.licenseExpiryDate && (
-                <div className="error-message">
-                  <i className="bi bi-exclamation-circle"></i>
-                  {errors.licenseExpiryDate}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className={`form-group ${errors.tradeLicenseAuthority && touched.tradeLicenseAuthority ? 'has-error' : ''}`}>
-          <label htmlFor="tradeLicenseAuthority" className="form-label">
-            <i className="bi bi-building me-2"></i>
-            Trade License Authority
-          </label>
-          <div className="input-wrapper">
-            <input
-              type="text"
-              id="tradeLicenseAuthority"
-              name="tradeLicenseAuthority"
-              className="form-input"
-              value={formData.tradeLicenseAuthority}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Enter trade license authority"
-              // required
-            />
-            {errors.tradeLicenseAuthority && touched.tradeLicenseAuthority && (
-              <div className="error-message">
-                <i className="bi bi-exclamation-circle"></i>
-                {errors.tradeLicenseAuthority}
-              </div>
-            )}
-          </div>
-        </div>
+        <button
+          type="button"
+          className="add-document-btn"
+          onClick={addDocumentField}
+        >
+          <i className="bi bi-plus-circle me-2"></i>
+          Add Document
+        </button>
 
         <button
           type="submit"
