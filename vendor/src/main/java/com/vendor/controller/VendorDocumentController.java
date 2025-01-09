@@ -1,13 +1,19 @@
 package com.vendor.controller;
 
+import com.vendor.dto.VendorDocumentDTO;
 import com.vendor.entity.VendorDocument;
+import com.vendor.exception.APIException;
+import com.vendor.exception.ResourceNotFoundException;
 import com.vendor.service.VendorDocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +21,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/vendor/documents")
 public class VendorDocumentController {
+
+    private static final Logger logger = LoggerFactory.getLogger(VendorDocumentController.class);
 
     @Autowired
     private VendorDocumentService documentService;
@@ -47,6 +55,19 @@ public class VendorDocumentController {
                         "attachment; filename=\"" + document.getOriginalFilename() + "\"")
                 .contentType(MediaType.parseMediaType(document.getContentType()))
                 .body(fileContent);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllDocuments() {
+        try {
+            List<VendorDocumentDTO> documents = documentService.getAllDocumentsDTO();
+            return ResponseEntity.ok(documents);
+        } catch (Exception e) {
+            logger.error("Error fetching documents: ", e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResourceNotFoundException(e.getMessage()));
+        }
     }
 
 }

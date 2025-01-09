@@ -15,27 +15,56 @@ axios.interceptors.request.use(function (config) {
   });
 
   // Upload document with multipart form data
-export const uploadDocument = (file, vendorId, documentTypeId, expiryDate) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('vendorId', vendorId);
-    formData.append('documentTypeId', documentTypeId);
-    formData.append('expiryDate', expiryDate);
-    
-    return axios.post(`${BASE_REST_API_URL}/upload`, formData);
-}
+export const uploadDocument = async (file, vendorId, documentTypeId, expiryDate) => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('vendorId', vendorId);
+        formData.append('documentTypeId', documentTypeId);
+        formData.append('expiryDate', expiryDate);
+        
+        const response = await apiClient.post('/vendor/documents/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            }
+        });
+        return response;
+    } catch (error) {
+        console.error('Error uploading document:', error);
+        throw error;
+    }
+};
 
 // Get all documents for a vendor
-export const getVendorDocuments = (vendorId) => 
-    axios.get(`${BASE_REST_API_URL}/vendor/${vendorId}`);
+export const getVendorDocuments = async () => {
+    try {
+        const response = await apiClient.get('/vendor/documents');
+        return response;
+    } catch (error) {
+        console.error('Error fetching vendor documents:', error);
+        throw error;
+    }
+};
 
 
 // Get single document (returns file content)
-export const getDocument = (documentId) => 
-    axios.get(`${BASE_REST_API_URL}/${documentId}`, {
-        responseType: 'blob'  // Important for handling file downloads
-    })
+export const getDocument = async (documentId) => {
+    try {
+        const response = await apiClient.get(`/vendor/documents/${documentId}`, {
+            responseType: 'blob'  // Important for handling file downloads
+        });
+        return response;
+    } catch (error) {
+        console.error('Error downloading document:', error);
+        throw error;
+    }
+};
   
+export default {
+    getVendorDocuments,
+    getDocument,
+    uploadDocument
+};
 // export const getAllCounter = () => axios.get(BASE_REST_API_URL)
 
 // export const addCounter = (counter) => axios.post(BASE_REST_API_URL, counter)

@@ -1,5 +1,6 @@
 package com.vendor.service;
 
+import com.vendor.dto.VendorDocumentDTO;
 import com.vendor.entity.DocumentType;
 import com.vendor.entity.Vendor;
 import com.vendor.entity.VendorDocument;
@@ -12,12 +13,18 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 public class VendorDocumentService {
     public VendorDocumentService(VendorDocumentRepository documentRepository) {
         this.documentRepository = documentRepository;
     }
+    private static final Logger logger = LoggerFactory.getLogger(VendorDocumentService.class);
 
     @Autowired
     private VendorDocumentRepository documentRepository;
@@ -85,4 +92,74 @@ public class VendorDocumentService {
             throw new RuntimeException("Error retrieving file");
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<VendorDocument> getAllDocuments() {
+        try {
+            logger.debug("Fetching all vendor documents");
+            List<VendorDocument> documents = documentRepository.findAll();
+
+            // Validate and ensure all necessary relationships are loaded
+            List<VendorDocument> validatedDocuments = new ArrayList<>();
+            for (VendorDocument doc : documents) {
+                try {
+                    // Validate vendor information
+                    if (doc.getVendor() == null) {
+                        logger.warn("Document ID {} has no associated vendor", doc.getDocumentId());
+                        continue;
+                    }
+
+                    // Validate document type information
+                    if (doc.getDocumentType() == null) {
+                        logger.warn("Document ID {} has no associated document type", doc.getDocumentId());
+                        continue;
+                    }
+
+                    // Validate file path
+                    if (doc.getFilePath() == null || doc.getFilePath().isEmpty()) {
+                        logger.warn("Document ID {} has no file path", doc.getDocumentId());
+                        continue;
+                    }
+
+                    // Add only valid documents to the result list
+                    validatedDocuments.add(doc);
+                } catch (Exception e) {
+                    logger.error("Error processing document ID {}: {}", doc.getDocumentId(), e.getMessage());
+                }
+            }
+
+            logger.info("Successfully fetched {} valid documents out of {} total documents",
+                    validatedDocuments.size(), documents.size());
+
+            return validatedDocuments;
+
+        } catch (Exception e) {
+            logger.error("Error fetching all documents: ", e);
+            throw new RuntimeException("Failed to fetch vendor documents", e);
+        }
+    }
+
+    // Optional: Add a method to return DTOs instead of entities
+    @Transactional(readOnly = true)
+    public List<VendorDocumentDTO> getAllDocumentsDTO() {
+        List<VendorDocument> documents = getAllDocuments();
+        return documents.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private VendorDocumentDTO convertToDTO(VendorDocument doc) {
+        return VendorDocumentDTO.builder()
+                .id(doc.getDocumentId())
+                .vendorName(doc.getVendor().getName())
+                .documentType(doc.getDocumentType().getTypeName())
+                .fileName(doc.getOriginalFilename())
+                .uploadDate(doc.getUploadDate())
+                .expiryDate(doc.getExpiryDate())
+                .status(doc.getStatus())
+                .contentType(doc.getContentType())
+                .fileSize(doc.getFileSize())
+                .build();
+    }
+
 }

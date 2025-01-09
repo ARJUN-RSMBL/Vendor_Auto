@@ -1,6 +1,11 @@
 import { NavLink } from 'react-router-dom';
 import '../styles/HeaderStyles.css';
-import { isAdminUser, isUserLoggedIn, logout } from '../services/authService'
+import {
+  isAdminUser,
+  isUserLoggedIn,
+  logout,
+  hasVendorAccess  // Add this import
+} from '../services/authService'
 import { useNavigate } from 'react-router-dom'
 
 const HeaderComponent = () => {
@@ -56,6 +61,14 @@ const HeaderComponent = () => {
                     Vendors</NavLink>
                 </li>
               }
+              {isAuth && hasVendorAccess() && (
+                <li className='nav-item'>
+                  <NavLink to="/documents" className="nav-link d-flex align-items-center">
+                    <i className="bi bi-file-text me-1"></i>
+                    Documents
+                  </NavLink>
+                </li>
+              )}
               {
                 !isAuth &&
                 <li className='nav-item'>

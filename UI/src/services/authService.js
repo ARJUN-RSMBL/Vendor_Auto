@@ -66,3 +66,16 @@ export const isAdminUser = () => {
         return false;
     }
 }
+
+export const hasRole = (requiredRole) => {
+    const role = sessionStorage.getItem("role");
+    return role === requiredRole;
+};
+
+export const isVendorUser = () => {
+    return hasRole("ROLE_VENDOR");
+};
+
+export const hasVendorAccess = () => {
+    return isAdminUser() || isVendorUser();
+};
