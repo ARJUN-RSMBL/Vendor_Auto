@@ -70,6 +70,10 @@ function VendorFormComponent() {
       newErrors.name = 'Name must be at least 3 characters';
     }
 
+    if (!formData.vendorLicense?.trim()) {
+      newErrors.vendorLicense = 'Vendor license is required';
+    }
+
     if (formData.email && !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       newErrors.email = 'Please enter a valid email address';
     }
@@ -132,6 +136,7 @@ function VendorFormComponent() {
 
       // Add basic vendor fields
       formDataToSend.append('name', formData.name.trim());
+      formDataToSend.append('vendorLicense', formData.vendorLicense.trim());
       if (formData.email) {
         formDataToSend.append('email', formData.email.trim());
       }
@@ -172,6 +177,7 @@ function VendorFormComponent() {
         setFormData({
           name: '',
           email: '',
+          vendorLicense: '',
           documents: [{ file: null, expiryDate: '', documentTypeId: '' }]
         });
       }
@@ -302,31 +308,31 @@ function VendorFormComponent() {
           </div>
         </div>
 
-        {/* <div className={`form-group ${errors.expiryDate && touched.expiryDate ? 'has-error' : ''}`}>
-          <label htmlFor="expiryDate" className="form-label">
-            <i className="bi bi-calendar me-2"></i>
-            Expiry Date
+        <div className={`form-group ${errors.vendorLicense && touched.vendorLicense ? 'has-error' : ''}`}>
+          <label htmlFor="vendorLicense" className="form-label">
+            <i className="bi bi-card-text me-2"></i>
+            Vendor License
           </label>
           <div className="input-wrapper">
             <input
-              type="date"
-              id="expiryDate"
-              name="expiryDate"
-              value={formData.expiryDate}
+              type="text"
+              id="vendorLicense"
+              name="vendorLicense"
+              value={formData.vendorLicense}
               onChange={handleChange}
               onBlur={handleBlur}
+              placeholder="Enter vendor license number"
               required
               className="form-input"
-              min={new Date().toISOString().split('T')[0]}
             />
-            {errors.expiryDate && touched.expiryDate && (
+            {errors.vendorLicense && touched.vendorLicense && (
               <div className="error-message">
                 <i className="bi bi-exclamation-circle"></i>
-                {errors.expiryDate}
+                {errors.vendorLicense}
               </div>
             )}
           </div>
-        </div> */}
+        </div>
 
 
 
