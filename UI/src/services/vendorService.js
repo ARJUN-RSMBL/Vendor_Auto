@@ -24,16 +24,72 @@ const vendorService = {
         }
     },
 
-    // Create new vendor
-    createVendor: async (vendorData) => {
-        try {
-            const response = await apiClient.post('/vendor', vendorData);
-            return response.data;
-        } catch (error) {
-            console.error('Error creating vendor:', error);
-            throw error;
+    // // Create new vendor
+    // createVendor: async (vendorData) => {
+    //     try {
+    //         const response = await apiClient.post('/vendor', vendorData);
+    //         return response.data;
+    //     } catch (error) {
+    //         console.error('Error creating vendor:', error);
+    //         throw error;
+    //     }
+    // },
+    createVendor: async (formData) => {
+        console.log('Sending request to create vendor');
+  try {
+    // First create the vendor
+    const vendorResponse = await apiClient.post('/vendor', {
+      name: formData.get('name'),
+      email: formData.get('email')
+    });
+    
+    const vendorId = vendorResponse.data.id;
+    console.log('Vendor created with ID:', vendorId);
+    
+    // Then upload each document
+    const documentsData = JSON.parse(formData.get('documents'));
+    const files = formData.getAll('files');
+    const fileIndices = formData.getAll('fileIndices');
+    
+    // Upload each document
+    const documentPromises = files.map(async (file, index) => {
+      const documentData = documentsData[fileIndices[index]];
+      const documentFormData = new FormData();
+      
+      documentFormData.append('file', file);
+      documentFormData.append('vendorId', vendorId);
+      documentFormData.append('documentTypeId', documentData.documentTypeId);
+      documentFormData.append('expiryDate', documentData.expiryDate);
+      
+      console.log('Uploading document:', {
+        vendorId,
+        documentTypeId: documentData.documentTypeId,
+        expiryDate: documentData.expiryDate,
+        fileName: file.name
+      });
+      
+      return apiClient.post('/vendor/documents/upload', documentFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
         }
-    },
+      });
+    });
+    
+    // Wait for all documents to be uploaded
+    const documentResponses = await Promise.all(documentPromises);
+    console.log('All documents uploaded:', documentResponses);
+    
+    // Return the vendor response
+    return vendorResponse;
+    
+  } catch (error) {
+    console.error('Vendor creation error:', error);
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+    }
+    throw error;
+  }
+},
 
     // Update vendor
     updateVendor: (id, vendorData) => {

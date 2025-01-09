@@ -21,12 +21,34 @@ public class VendorController {
     @Autowired
     private VendorService vendorService;
 
+//    @PostMapping
+//    public ResponseEntity<?> createVendor(@RequestBody Vendor vendor) {
+//        try {
+//            Vendor savedVendor = vendorService.createVendor(vendor);
+//            return new ResponseEntity<>(savedVendor, HttpStatus.CREATED);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Error occurred: " + e.getMessage());
+//        }
+//    }
+
     @PostMapping
     public ResponseEntity<?> createVendor(@RequestBody Vendor vendor) {
         try {
+            // Log the incoming request
+            System.out.println("Received vendor creation request: " + vendor);
+
             Vendor savedVendor = vendorService.createVendor(vendor);
+
+            // Log the saved vendor
+            System.out.println("Vendor created successfully: " + savedVendor);
+
             return new ResponseEntity<>(savedVendor, HttpStatus.CREATED);
         } catch (Exception e) {
+            // Log the error
+            System.err.println("Error creating vendor: " + e.getMessage());
+            e.printStackTrace();
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error occurred: " + e.getMessage());
         }

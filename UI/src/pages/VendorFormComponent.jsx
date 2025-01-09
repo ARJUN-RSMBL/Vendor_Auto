@@ -117,59 +117,70 @@ function VendorFormComponent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form submission started');
-  
+
     const isValid = validateForm();
     console.log('Form validation result:', isValid);
-  
+
     if (!isValid) {
       toast.error('Please fill in all required fields correctly');
       return;
     }
-  
+
     setIsSubmitting(true);
     try {
       const formDataToSend = new FormData();
-      
+
       // Add basic vendor fields
       formDataToSend.append('name', formData.name.trim());
       if (formData.email) {
         formDataToSend.append('email', formData.email.trim());
       }
-  
-      // Add documents - ensure all required fields are included
+
+      // Add documents array as JSON string first to maintain structure
+      // Create and log documents data before sending
+      const documentsData = formData.documents.map(doc => ({
+        documentTypeId: doc.documentTypeId,
+        expiryDate: new Date(doc.expiryDate).toISOString().split('T')[0]
+      }));
+      console.log('Documents data being sent:', documentsData);
+      formDataToSend.append('documents', JSON.stringify(documentsData));
+
+      // Log files being sent
       formData.documents.forEach((doc, index) => {
-        if (doc.documentTypeId) {
-          // Convert date to proper format (YYYY-MM-DD)
-          const formattedDate = new Date(doc.expiryDate).toISOString().split('T')[0];
-          
-          formDataToSend.append(`documents[${index}].documentTypeId`, doc.documentTypeId);
-          formDataToSend.append(`documents[${index}].expiryDate`, formattedDate);
-          if (doc.file) {
-            formDataToSend.append(`documents[${index}].file`, doc.file);
-          }
+        if (doc.file) {
+          console.log(`File ${index}:`, {
+            name: doc.file.name,
+            type: doc.file.type,
+            size: doc.file.size
+          });
+          formDataToSend.append(`files`, doc.file);
+          formDataToSend.append(`fileIndices`, index);
         }
       });
-  
-      // Log the FormData contents for debugging
+
+      // Log complete FormData contents
+      console.log('Complete form data entries:');
       for (let pair of formDataToSend.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
+        console.log(`${pair[0]}: ${pair[0] === 'files' ? 'File object' : pair[1]}`);
       }
-  
-      console.log('Submitting form data...');
+
       const response = await vendorService.createVendor(formDataToSend);
-      console.log('Submit response:', response);
-      
-      toast.success('Vendor registered successfully!');
-      // Reset form after successful submission
-      setFormData({
-        name: '',
-        email: '',
-        documents: [{ file: null, expiryDate: '', documentTypeId: '' }]
-      });
-      
+      console.log('Full response:', response);
+
+      if (response.data) {
+        toast.success('Vendor registered successfully!');
+        setFormData({
+          name: '',
+          email: '',
+          documents: [{ file: null, expiryDate: '', documentTypeId: '' }]
+        });
+      }
+
     } catch (error) {
+      console.error('Submission error:', error);
       let errorMessage = 'Failed to register vendor';
       if (error.response) {
+        console.error('Error response:', error.response);
         // Handle specific HTTP error responses
         switch (error.response.status) {
           case 400:
@@ -203,15 +214,21 @@ function VendorFormComponent() {
     }));
   };
 
+  // Add error display for document file
   const handleFileChange = (index, e) => {
     const file = e.target.files[0];
+    if (file && file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast.error('File size should not exceed 5MB');
+      e.target.value = ''; // Reset input
+      return;
+    }
     handleDocumentChange(index, 'file', file);
   };
 
   const addDocumentField = () => {
     setFormData(prev => ({
       ...prev,
-      documents: [...prev.documents, { file: null, expiryDate: '', documentName: '' }]
+      documents: [...prev.documents, { file: null, expiryDate: '', documentTypeId: '' }] // Changed documentName to documentTypeId
     }));
   };
 
