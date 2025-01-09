@@ -83,13 +83,32 @@ public class VendorDocumentService {
         return documentRepository.findByVendorId(vendorId);
     }
 
-    public byte[] getDocument(Long documentId) {
+//    public byte[] getDocument(Long documentId) {
+//        VendorDocument document = documentRepository.findById(documentId)
+//                .orElseThrow(() -> new RuntimeException("Document not found"));
+//        try {
+//            return storageService.retrieveFile(document.getFilePath());
+//        } catch (Exception e) {
+//            throw new RuntimeException("Error retrieving file");
+//        }
+//    }
+public Optional<VendorDocument> getDocument(Long documentId) {
+    return documentRepository.findById(documentId);
+}
+
+    // Add new method for getting document content
+    public byte[] getDocumentContent(Long documentId) {
         VendorDocument document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new RuntimeException("Document not found with id: " + documentId));
         try {
-            return storageService.retrieveFile(document.getFilePath());
+            byte[] content = storageService.retrieveFile(document.getFilePath());
+            if (content == null || content.length == 0) {
+                throw new RuntimeException("Document content is empty for id: " + documentId);
+            }
+            return content;
         } catch (Exception e) {
-            throw new RuntimeException("Error retrieving file");
+            logger.error("Error retrieving document content for id {}: {}", documentId, e.getMessage());
+            throw new RuntimeException("Error retrieving document content: " + e.getMessage());
         }
     }
 
@@ -161,5 +180,6 @@ public class VendorDocumentService {
                 .fileSize(doc.getFileSize())
                 .build();
     }
+
 
 }

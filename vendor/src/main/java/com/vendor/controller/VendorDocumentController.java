@@ -45,17 +45,38 @@ public class VendorDocumentController {
         return ResponseEntity.ok(documents);
     }
 
-    @GetMapping("/{documentId}")
-    public ResponseEntity<byte[]> getDocument(@PathVariable Long documentId) {
-        VendorDocument document = documentService.getVendorDocuments(documentId).get(0);
-        byte[] fileContent = documentService.getDocument(documentId);
+//    @GetMapping("/{documentId}")
+//    public ResponseEntity<byte[]> getDocument(@PathVariable Long documentId) {
+//        VendorDocument document = documentService.getVendorDocuments(documentId).get(0);
+//        byte[] fileContent = documentService.getDocument(documentId);
+//
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION,
+//                        "attachment; filename=\"" + document.getOriginalFilename() + "\"")
+//                .contentType(MediaType.parseMediaType(document.getContentType()))
+//                .body(fileContent);
+//    }
+@GetMapping("/{documentId}")
+public ResponseEntity<byte[]> getDocument(@PathVariable Long documentId) {
+    try {
+        VendorDocument document = documentService.getDocument(documentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + documentId));
+
+        byte[] fileContent = documentService.getDocumentContent(documentId);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"" + document.getOriginalFilename() + "\"")
                 .contentType(MediaType.parseMediaType(document.getContentType()))
                 .body(fileContent);
+    } catch (ResourceNotFoundException e) {
+        logger.error("Document not found: {}", documentId, e);
+        return ResponseEntity.notFound().build();
+    } catch (Exception e) {
+        logger.error("Error downloading document: {}", documentId, e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+}
 
     @GetMapping
     public ResponseEntity<?> getAllDocuments() {

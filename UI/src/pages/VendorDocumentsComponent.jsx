@@ -41,17 +41,29 @@ function VendorDocumentsComponent() {
     const handleDownload = async (documentId, fileName) => {
         try {
             const response = await getDocument(documentId);
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+
+            // Check if response has data and it's a valid blob
+            if (!response?.data || !(response.data instanceof Blob)) {
+                throw new Error('Invalid document data received');
+            }
+
+            const url = window.URL.createObjectURL(response.data);
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', fileName);
             document.body.appendChild(link);
             link.click();
             link.remove();
+            // Clean up the URL object
+            window.URL.revokeObjectURL(url);
+
             toast.success('Document downloaded successfully');
         } catch (error) {
             console.error('Error downloading document:', error);
-            toast.error('Failed to download document');
+            const errorMessage = error.response?.status === 500
+                ? 'Server error occurred while downloading the document. Please try again later.'
+                : 'Failed to download document. Please try again.';
+            toast.error(errorMessage);
         }
     };
 
