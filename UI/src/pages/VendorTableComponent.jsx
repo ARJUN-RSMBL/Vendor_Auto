@@ -5,6 +5,8 @@ import EditVendorModal from '../components/EditVendorModal';
 import vendorService from '../services/vendorService';
 import { toast } from 'react-toastify';
 import '../styles/TableStyles.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 function VendorTableComponent() {
   const [vendors, setVendors] = useState([]);
@@ -19,6 +21,15 @@ function VendorTableComponent() {
     } catch (error) {
       console.error('Error fetching vendors:', error);
       toast.error('Failed to fetch vendors');
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await fetchVendors();
+      toast.success('Vendors refreshed successfully');
+    } catch (error) {
+      toast.error('Failed to refresh vendors');
     }
   };
 
@@ -53,10 +64,13 @@ function VendorTableComponent() {
     <div className="vendor-container">
       <div className="vendor-header">
         <h2>Vendor Details</h2>
-        <button className="refresh-button" onClick={fetchVendors}>
+        <Button
+          className="refresh-button"
+          onClick={handleRefresh}
+        >
           <i className="bi bi-arrow-clockwise"></i>
-          Refresh
-        </button>
+          {' '}Refresh
+        </Button>
       </div>
 
       <div className="table-responsive">
