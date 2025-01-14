@@ -5,11 +5,11 @@ import { toast } from 'react-toastify';
 
 function EditVendorModal({ vendor, onClose, onSave }) {
   const [formData, setFormData] = useState({
-    name: vendor.name,
-    email: vendor.email,
-    vendorLicense: vendor.vendorLicense,
-    expiryDate: vendor.expiryDate.split('T')[0],
-    // status: vendor.status
+    name: vendor.name || '',
+    email: vendor.email || '',
+    vendorLicense: vendor.vendorLicense || '',
+    expiryDate: vendor.expiryDate ? vendor.expiryDate.split('T')[0] : '',
+    status: vendor.status || 'Active'
   });
 
   const handleChange = (e) => {
@@ -37,8 +37,8 @@ function EditVendorModal({ vendor, onClose, onSave }) {
       <Modal.Header closeButton>
         <Modal.Title>Edit Vendor</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
+        <Modal.Body>
           <Form.Group className="mb-3">
             <Form.Label>Name</Form.Label>
             <Form.Control
@@ -83,7 +83,7 @@ function EditVendorModal({ vendor, onClose, onSave }) {
             />
           </Form.Group>
 
-          {/* <Form.Group className="mb-3">
+          <Form.Group className="mb-3">
             <Form.Label>Status</Form.Label>
             <Form.Select
               name="status"
@@ -95,17 +95,17 @@ function EditVendorModal({ vendor, onClose, onSave }) {
               <option value="Inactive">Inactive</option>
               <option value="Pending">Pending</option>
             </Form.Select>
-          </Form.Group> */}
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button variant="primary" onClick={handleSubmit}>
-          Save Changes
-        </Button>
-      </Modal.Footer>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" type="submit">
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Form>
     </Modal>
   );
 }
