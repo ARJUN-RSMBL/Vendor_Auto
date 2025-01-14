@@ -11,6 +11,7 @@ const RegisterComponent = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isVendor, setIsVendor] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -26,7 +27,13 @@ const RegisterComponent = () => {
             return;
         }
 
-        const register = { name, username, email, password }
+        const register = {
+            name,
+            username,
+            email,
+            password,
+            role: isVendor ? 'ROLE_VENDOR' : 'ROLE_USER'  // Add role based on selection
+        }
 
         console.log(register);
 
@@ -185,6 +192,28 @@ const RegisterComponent = () => {
                                                 <i className={`bi bi-eye${showConfirmPassword ? '-slash' : ''}`}></i>
                                             </button>
                                         </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <div className="form-check">
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id="vendorRole"
+                                                checked={isVendor}
+                                                onChange={(e) => setIsVendor(e.target.checked)}
+                                            />
+                                            <label className="form-check-label fw-semibold" htmlFor="vendorRole">
+                                                <i className="bi bi-shop me-2"></i>
+                                                Register as Vendor
+                                            </label>
+                                        </div>
+                                        {isVendor && (
+                                            <small className="text-muted d-block mt-1">
+                                                <i className="bi bi-info-circle me-1"></i>
+                                                Vendor accounts can manage products and services
+                                            </small>
+                                        )}
                                     </div>
 
                                     <div className="d-grid gap-2">
