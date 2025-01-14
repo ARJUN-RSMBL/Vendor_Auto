@@ -118,21 +118,61 @@ const vendorService = {
   },
   updateVendorDocuments: async (formData) => {
     try {
-      // Add username to formData
-      const username = getLoggedInUser(); // from authService
-      formData.append('username', username);
+      const username = getLoggedInUser();
+      if (!formData.has('username')) {
+        formData.append('username', username);
+      }
 
-      const response = await apiClient.post('/vendor/documents/update', formData, {
+      // Create a new FormData object with corrected parameter names
+      const updatedFormData = new FormData();
+      updatedFormData.append('username', username);
+      
+      // Add documents data
+      const documentsData = JSON.parse(formData.get('documents'));
+      updatedFormData.append('documents', formData.get('documents'));
+
+      // Add file with correct parameter name
+      const files = formData.getAll('files');
+      const fileIndices = formData.getAll('fileIndices');
+      
+      if (files.length > 0) {
+        updatedFormData.append('file', files[0]); // Server expects 'file' not 'files'
+        updatedFormData.append('documentIndex', fileIndices[0]);
+      }
+
+      const response = await apiClient.post('/vendor/documents/update-with-file', updatedFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 30000,
       });
+
+      // Enhanced error handling based on status codes
+      if (response.status !== 200) {
+        const errorMessage = response.data?.message || 'Unknown server error';
+        console.error('Server response:', {
+          status: response.status,
+          data: response.data,
+          headers: response.headers
+        });
+        throw new Error(`Server error (${response.status}): ${errorMessage}`);
+      }
+
       return response;
     } catch (error) {
-      console.error('Error updating vendor documents:', error);
-      throw error;
+      console.error('Document update error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+
+      // Throw a user-friendly error with technical details
+      throw new Error(
+        `Failed to update documents: ${error.response?.data?.message || error.message}. ` +
+        'Please check the console for technical details.'
+      );
     }
-  },
+  }
 };
 
 export default vendorService;

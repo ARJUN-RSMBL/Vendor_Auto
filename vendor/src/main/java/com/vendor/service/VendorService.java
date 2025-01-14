@@ -49,6 +49,11 @@ public class VendorService {
         return vendorRepository.save(vendor);
     }
 
+    public Vendor getVendorByUsername(String username) {
+        return vendorRepository.findByUserUsername(username)
+                .orElseThrow(() -> new RuntimeException("Vendor not found for user: " + username));
+    }
+
    public Vendor getVendorById(Long id) {
         return vendorRepository.getVendorById(id);
    }

@@ -1,5 +1,7 @@
 package com.vendor.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vendor.dto.VendorDocumentDTO;
 import com.vendor.entity.VendorDocument;
 import com.vendor.exception.APIException;
@@ -16,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/vendor/documents")
@@ -88,6 +92,40 @@ public ResponseEntity<byte[]> getDocument(@PathVariable Long documentId) {
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ResourceNotFoundException(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/update-with-file")
+    public ResponseEntity<?> updateVendorDocuments(
+            @RequestParam("username") String username,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("documents") String documentsJson) {
+        try {
+            logger.info("Received update request - Username: {}", username);
+            logger.info("File details - Name: {}, Size: {}, Content Type: {}",
+                    file.getOriginalFilename(), file.getSize(), file.getContentType());
+            logger.info("Documents JSON: {}", documentsJson);
+
+            // Parse JSON to verify format
+            ObjectMapper mapper = new ObjectMapper();
+            List<Map<String, Object>> documents = mapper.readValue(documentsJson,
+                    new TypeReference<List<Map<String, Object>>>() {});
+            logger.info("Parsed documents data: {}", documents);
+
+            documentService.updateVendorDocuments(username, file, documentsJson);
+
+            return ResponseEntity.ok()
+                    .body(new HashMap<String, String>() {{
+                        put("message", "Documents updated successfully");
+                    }});
+
+        } catch (Exception e) {
+            logger.error("Error processing document update", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new HashMap<String, String>() {{
+                        put("message", "Error updating documents: " + e.getMessage());
+                        put("error", e.getClass().getSimpleName());
+                    }});
         }
     }
 

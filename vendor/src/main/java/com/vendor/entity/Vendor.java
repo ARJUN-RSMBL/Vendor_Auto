@@ -53,6 +53,18 @@ public class Vendor {
         return "Active";
     }
 
+    @OneToOne(mappedBy = "vendor")
+    private User user;
+
+    // Add getter and setter for user
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public Long getId() {
         return id;
     }

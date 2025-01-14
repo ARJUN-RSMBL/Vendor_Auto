@@ -26,9 +26,9 @@ function VendorFormComponent() {
   useEffect(() => {
     const fetchDocumentTypes = async () => {
       try {
-        console.log('Starting to fetch document types');
+        // console.log('Starting to fetch document types');
         const response = await getAllDocumentTypes();
-        console.log('Response received:', response);
+        // console.log('Response received:', response);
 
         if (!response.data || response.data.length === 0) {
           console.warn('No document types found');
@@ -55,9 +55,9 @@ function VendorFormComponent() {
       if (isVendor) {
         try {
           const username = getLoggedInUser();
-          console.log('Fetching details for username:', username);
+          // console.log('Fetching details for username:', username);
           const response = await vendorService.getVendorDetails(username);
-          console.log('Vendor details received:', response);
+          // console.log('Vendor details received:', response);
           setVendorDetails(response);
         } catch (error) {
           console.error('Error fetching vendor details:', error);
@@ -89,7 +89,7 @@ function VendorFormComponent() {
 
   const validateForm = () => {
     const newErrors = {};
-    console.log('Starting validation with data:', formData);
+    // console.log('Starting validation with data:', formData);
 
     // Only validate vendor fields if not a vendor user
     if (!isVendor) {
@@ -151,10 +151,10 @@ function VendorFormComponent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submission started');
+    // console.log('Form submission started');
 
     const isValid = validateForm();
-    console.log('Form validation result:', isValid);
+    // console.log('Form validation result:', isValid);
 
     if (!isValid) {
       toast.error('Please fill in all required fields correctly');
@@ -205,7 +205,7 @@ function VendorFormComponent() {
     });
 
       // Log complete FormData contents
-      console.log('Complete form data entries:');
+      // console.log('Complete form data entries:');
       for (let pair of formDataToSend.entries()) {
         console.log(`${pair[0]}: ${pair[0] === 'files' ? 'File object' : pair[1]}`);
       }

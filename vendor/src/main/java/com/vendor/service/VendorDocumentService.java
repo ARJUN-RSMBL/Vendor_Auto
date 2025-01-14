@@ -2,16 +2,22 @@ package com.vendor.service;
 
 import com.vendor.dto.VendorDocumentDTO;
 import com.vendor.entity.DocumentType;
+import com.vendor.entity.User;
 import com.vendor.entity.Vendor;
 import com.vendor.entity.VendorDocument;
+import com.vendor.repository.UserRepository;
 import com.vendor.repository.VendorDocumentRepository;
+import com.vendor.repository.VendorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +27,10 @@ import java.util.stream.Collectors;
 
 @Service
 public class VendorDocumentService {
-    public VendorDocumentService(VendorDocumentRepository documentRepository) {
+    public VendorDocumentService(VendorDocumentRepository documentRepository, VendorDocumentRepository vendorDocumentRepository, com.vendor.repository.VendorRepository vendorRepository, com.vendor.repository.UserRepository userRepository, UserRepository userRepository1) {
         this.documentRepository = documentRepository;
+        VendorRepository = vendorRepository;
+        this.userRepository = userRepository1;
     }
     private static final Logger logger = LoggerFactory.getLogger(VendorDocumentService.class);
 
@@ -37,6 +45,9 @@ public class VendorDocumentService {
 
     @Autowired
     private VendorService vendorService; // You'll need to inject VendorService
+
+    private final VendorRepository VendorRepository;
+    private final UserRepository userRepository;
 
     public VendorDocument uploadDocument(MultipartFile file, Long vendorId,
                                          Long documentTypeId, LocalDate expiryDate) {
@@ -179,6 +190,77 @@ public Optional<VendorDocument> getDocument(Long documentId) {
                 .contentType(doc.getContentType())
                 .fileSize(doc.getFileSize())
                 .build();
+    }
+
+    @Transactional
+    public void updateVendorDocuments(String username, MultipartFile file, String documentsJson) {
+        try {
+            logger.info("Starting document update process for user: {}", username);
+
+            // Get vendor
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
+            Vendor vendor = user.getVendor();
+            if (vendor == null) {
+                throw new RuntimeException("No vendor associated with user: " + username);
+            }
+            logger.info("Found vendor: {}", vendor.getName());
+
+            // Parse documents JSON
+            ObjectMapper mapper = new ObjectMapper();
+            List<Map<String, Object>> documents = mapper.readValue(
+                    documentsJson,
+                    new TypeReference<List<Map<String, Object>>>() {}
+            );
+
+            for (Map<String, Object> doc : documents) {
+                Long documentTypeId = Long.parseLong(doc.get("documentTypeId").toString());
+                LocalDate expiryDate = LocalDate.parse(doc.get("expiryDate").toString());
+
+                logger.info("Processing document - Type: {}, Expiry: {}", documentTypeId, expiryDate);
+
+                // Get document type
+                DocumentType docType = documentTypeService.getDocumentType(documentTypeId);
+                if (docType == null) {
+                    throw new RuntimeException("Document type not found: " + documentTypeId);
+                }
+
+                // Store file
+                String filePath = storageService.storeFile(
+                        file,
+                        vendor.getId(),
+                        vendor.getName(),
+                        docType.getTypeName()
+                );
+                logger.info("File stored at: {}", filePath);
+
+                // Create document record
+                VendorDocument document = new VendorDocument();
+                document.setVendor(vendor);
+                document.setDocumentType(docType);
+                document.setOriginalFilename(file.getOriginalFilename());
+                document.setStoredFilename(filePath.substring(filePath.lastIndexOf("/") + 1));
+                document.setFilePath(filePath);
+                document.setUploadDate(LocalDateTime.now());
+                document.setExpiryDate(expiryDate);
+                document.setFileSize(file.getSize());
+                document.setContentType(file.getContentType());
+                document.setStatus("Active");
+
+                documentRepository.save(document);
+                logger.info("Document record saved with ID: {}", document.getDocumentId());
+            }
+
+        } catch (Exception e) {
+            logger.error("Error in updateVendorDocuments", e);
+            throw new RuntimeException("Failed to update vendor documents: " + e.getMessage(), e);
+        }
+    }
+
+    public Vendor getVendorByUsername(String username) {
+        return VendorRepository.findByUserUsername(username)
+                .orElseThrow(() -> new RuntimeException("Vendor not found with username: " + username));
     }
 
 
