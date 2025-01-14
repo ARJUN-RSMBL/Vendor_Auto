@@ -94,15 +94,13 @@ public class VendorDocumentService {
         return documentRepository.findByVendorId(vendorId);
     }
 
-//    public byte[] getDocument(Long documentId) {
-//        VendorDocument document = documentRepository.findById(documentId)
-//                .orElseThrow(() -> new RuntimeException("Document not found"));
-//        try {
-//            return storageService.retrieveFile(document.getFilePath());
-//        } catch (Exception e) {
-//            throw new RuntimeException("Error retrieving file");
-//        }
-//    }
+    public List<VendorDocumentDTO> getVendorDocumentsDTO(Long vendorId) {
+        List<VendorDocument> documents = documentRepository.findByVendorId(vendorId);
+        return documents.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
 public Optional<VendorDocument> getDocument(Long documentId) {
     return documentRepository.findById(documentId);
 }
@@ -172,6 +170,7 @@ public Optional<VendorDocument> getDocument(Long documentId) {
     // Optional: Add a method to return DTOs instead of entities
     @Transactional(readOnly = true)
     public List<VendorDocumentDTO> getAllDocumentsDTO() {
+        // This method should only be called by admin users
         List<VendorDocument> documents = getAllDocuments();
         return documents.stream()
                 .map(this::convertToDTO)
@@ -261,6 +260,35 @@ public Optional<VendorDocument> getDocument(Long documentId) {
     public Vendor getVendorByUsername(String username) {
         return VendorRepository.findByUserUsername(username)
                 .orElseThrow(() -> new RuntimeException("Vendor not found with username: " + username));
+    }
+
+    @Transactional(readOnly = true)
+    public List<VendorDocumentDTO> getVendorDocumentsByUsername(String username) {
+        try {
+            logger.debug("Fetching documents for vendor with username: {}", username);
+
+            // Get vendor by username
+            Vendor vendor = getVendorByUsername(username);
+            if (vendor == null) {
+                logger.warn("No vendor found for username: {}", username);
+                return new ArrayList<>();
+            }
+
+            // Get documents for this specific vendor
+            List<VendorDocument> documents = documentRepository.findByVendorId(vendor.getId());
+
+            // Convert to DTOs
+            List<VendorDocumentDTO> dtos = documents.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+
+            logger.info("Found {} documents for vendor: {}", dtos.size(), vendor.getName());
+            return dtos;
+
+        } catch (Exception e) {
+            logger.error("Error fetching vendor documents for username {}: {}", username, e.getMessage());
+            throw new RuntimeException("Failed to fetch vendor documents", e);
+        }
     }
 
 

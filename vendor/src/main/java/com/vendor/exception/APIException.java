@@ -39,6 +39,9 @@ public class APIException extends RuntimeException{
 
     }
 
+    public APIException(String message) {
+    }
+
     public HttpStatus getStatus() {
         return status;
     }

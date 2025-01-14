@@ -3,9 +3,12 @@ package com.vendor.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vendor.dto.VendorDocumentDTO;
+import com.vendor.entity.Document;
+import com.vendor.entity.Vendor;
 import com.vendor.entity.VendorDocument;
 import com.vendor.exception.APIException;
 import com.vendor.exception.ResourceNotFoundException;
+import com.vendor.repository.VendorRepository;
 import com.vendor.service.VendorDocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +24,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/vendor/documents")
@@ -30,6 +34,9 @@ public class VendorDocumentController {
 
     @Autowired
     private VendorDocumentService documentService;
+
+    @Autowired
+    private VendorRepository vendorRepository;
 
     @PostMapping("/upload")
     public ResponseEntity<VendorDocument> uploadDocument(
@@ -82,16 +89,43 @@ public ResponseEntity<byte[]> getDocument(@PathVariable Long documentId) {
     }
 }
 
-    @GetMapping
-    public ResponseEntity<?> getAllDocuments() {
+    @GetMapping("/user/{username}")
+    public ResponseEntity<?> getVendorDocumentsByUsername(@PathVariable String username) {
         try {
-            List<VendorDocumentDTO> documents = documentService.getAllDocumentsDTO();
+            Optional<Vendor> vendor = vendorRepository.findByUserUsername(username);
+            if (!vendor.isPresent()) {
+                throw new ResourceNotFoundException("Vendor not found for user: " + username);
+            }
+            List<VendorDocumentDTO> documents = documentService.getVendorDocumentsDTO(vendor.get().getId());
+            return ResponseEntity.ok(documents);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new APIException(e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error fetching vendor documents: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new APIException(e.getMessage()));
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllDocuments(@RequestParam(required = false) String username) {
+        try {
+            List<VendorDocumentDTO> documents;
+
+            if (username != null) {
+                // Vendor-specific request
+                documents = documentService.getVendorDocumentsByUsername(username);
+            } else {
+                // Admin request - get all documents
+                documents = documentService.getAllDocumentsDTO();
+            }
+
             return ResponseEntity.ok(documents);
         } catch (Exception e) {
             logger.error("Error fetching documents: ", e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResourceNotFoundException(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new APIException(e.getMessage()));
         }
     }
 

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken } from "./authService";
+import { getLoggedInUser, getToken, isAdminUser } from "./authService";
 import apiClient from './apiClient';
 
 const BASE_REST_API_URL = `${apiClient}/vendor/documents`;
@@ -36,16 +36,31 @@ export const uploadDocument = async (file, vendorId, documentTypeId, expiryDate)
 };
 
 // Get all documents for a vendor
+// export const getVendorDocuments = async () => {
+//     try {
+//         const response = await apiClient.get('/vendor/documents');
+//         return response;
+//     } catch (error) {
+//         console.error('Error fetching vendor documents:', error);
+//         throw error;
+//     }
+// };
+// ... existing imports ...
+
 export const getVendorDocuments = async () => {
     try {
-        const response = await apiClient.get('/vendor/documents');
+        const username = getLoggedInUser(); // Get the logged-in user's username
+        const endpoint = isAdminUser() 
+            ? '/vendor/documents'  // Admin endpoint to get all documents
+            : `/vendor/documents/user/${username}`; // Vendor-specific endpoint
+
+        const response = await apiClient.get(endpoint);
         return response;
     } catch (error) {
         console.error('Error fetching vendor documents:', error);
         throw error;
     }
 };
-
 
 // Get single document (returns file content)
 export const getDocument = async (documentId) => {
