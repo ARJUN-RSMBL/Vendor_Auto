@@ -5,6 +5,7 @@ import '../styles/FormStyles.css';
 import vendorService from '../services/vendorService';
 import { getAllDocumentTypes } from '../services/documentTypeService';
 import DocumentsSection from '../pages/DocumentsSection';
+import { isVendorUser } from '../services/authService';
 
 function VendorFormComponent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,6 +19,7 @@ function VendorFormComponent() {
   });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [isVendor, setIsVendor] = useState(false);
 
   // Add useEffect to fetch document types when component mounts
   useEffect(() => {
@@ -41,6 +43,11 @@ function VendorFormComponent() {
 
     fetchDocumentTypes();
   }, []);
+
+  useEffect(() => {
+    setIsVendor(isVendorUser());
+  }, []);
+
 
   const handleBlur = (e) => {
     const { name } = e.target;
@@ -135,12 +142,18 @@ function VendorFormComponent() {
       const formDataToSend = new FormData();
 
       // Add basic vendor fields
-      formDataToSend.append('name', formData.name.trim());
-      formDataToSend.append('vendorLicense', formData.vendorLicense.trim());
-      if (formData.email) {
-        formDataToSend.append('email', formData.email.trim());
+      // formDataToSend.append('name', formData.name.trim());
+      // formDataToSend.append('vendorLicense', formData.vendorLicense.trim());
+      // if (formData.email) {
+      //   formDataToSend.append('email', formData.email.trim());
+      // }
+      if (!isVendor) {
+        formDataToSend.append('name', formData.name.trim());
+        formDataToSend.append('vendorLicense', formData.vendorLicense.trim());
+        if (formData.email) {
+          formDataToSend.append('email', formData.email.trim());
+        }
       }
-
       // Add documents array as JSON string first to maintain structure
       // Create and log documents data before sending
       const documentsData = formData.documents.map(doc => ({
@@ -169,11 +182,14 @@ function VendorFormComponent() {
         console.log(`${pair[0]}: ${pair[0] === 'files' ? 'File object' : pair[1]}`);
       }
 
-      const response = await vendorService.createVendor(formDataToSend);
+      // const response = await vendorService.createVendor(formDataToSend);
+      const response = isVendor 
+      ? await vendorService.updateVendorDocuments(formDataToSend)
+      : await vendorService.createVendor(formDataToSend);
       console.log('Full response:', response);
 
       if (response.data) {
-        toast.success('Vendor registered successfully!');
+        toast.success(isVendor ? 'Documents updated successfully!' : 'Vendor registered successfully!');
         setFormData({
           name: '',
           email: '',
@@ -255,85 +271,88 @@ function VendorFormComponent() {
         <p className="form-subtitle">Enter details below</p>
       </div>
 
+      {/* <form className="iqama-form" onSubmit={handleSubmit} noValidate> */}
       <form className="iqama-form" onSubmit={handleSubmit} noValidate>
-        <div className={`form-group ${errors.name && touched.name ? 'has-error' : ''}`}>
-          <label htmlFor="name" className="form-label">
-            <i className="bi bi-person me-2"></i>
-            Name
-          </label>
-          <div className="input-wrapper">
-            <input
-              className="form-input"
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Enter vendor name"
-              required
-            />
-            {errors.name && touched.name && (
-              <div className="error-message">
-                <i className="bi bi-exclamation-circle"></i>
-                {errors.name}
+        {!isVendor && (
+          <>
+            <div className={`form-group ${errors.name && touched.name ? 'has-error' : ''}`}>
+              <label htmlFor="name" className="form-label">
+                <i className="bi bi-person me-2"></i>
+                Name
+              </label>
+              <div className="input-wrapper">
+                <input
+                  className="form-input"
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="Enter vendor name"
+                  required
+                />
+                {errors.name && touched.name && (
+                  <div className="error-message">
+                    <i className="bi bi-exclamation-circle"></i>
+                    {errors.name}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        <div className={`form-group ${errors.email && touched.email ? 'has-error' : ''}`}>
-          <label htmlFor="email" className="form-label">
-            <i className="bi bi-envelope me-2"></i>
-            Email
-          </label>
-          <div className="input-wrapper">
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Enter email address"
-              required
-              className="form-input"
-            />
-            {errors.email && touched.email && (
-              <div className="error-message">
-                <i className="bi bi-exclamation-circle"></i>
-                {errors.email}
+            <div className={`form-group ${errors.email && touched.email ? 'has-error' : ''}`}>
+              <label htmlFor="email" className="form-label">
+                <i className="bi bi-envelope me-2"></i>
+                Email
+              </label>
+              <div className="input-wrapper">
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="Enter email address"
+                  required
+                  className="form-input"
+                />
+                {errors.email && touched.email && (
+                  <div className="error-message">
+                    <i className="bi bi-exclamation-circle"></i>
+                    {errors.email}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        <div className={`form-group ${errors.vendorLicense && touched.vendorLicense ? 'has-error' : ''}`}>
-          <label htmlFor="vendorLicense" className="form-label">
-            <i className="bi bi-card-text me-2"></i>
-            Vendor License
-          </label>
-          <div className="input-wrapper">
-            <input
-              type="text"
-              id="vendorLicense"
-              name="vendorLicense"
-              value={formData.vendorLicense}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Enter vendor license number"
-              required
-              className="form-input"
-            />
-            {errors.vendorLicense && touched.vendorLicense && (
-              <div className="error-message">
-                <i className="bi bi-exclamation-circle"></i>
-                {errors.vendorLicense}
+            <div className={`form-group ${errors.vendorLicense && touched.vendorLicense ? 'has-error' : ''}`}>
+              <label htmlFor="vendorLicense" className="form-label">
+                <i className="bi bi-card-text me-2"></i>
+                Vendor License
+              </label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  id="vendorLicense"
+                  name="vendorLicense"
+                  value={formData.vendorLicense}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="Enter vendor license number"
+                  required
+                  className="form-input"
+                />
+                {errors.vendorLicense && touched.vendorLicense && (
+                  <div className="error-message">
+                    <i className="bi bi-exclamation-circle"></i>
+                    {errors.vendorLicense}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-
+            </div>
+          </>)}
 
 
         {/* Documents Section */}
@@ -361,7 +380,7 @@ function VendorFormComponent() {
           ) : (
             <>
               <i className="bi bi-check-circle me-2"></i>
-              Register Vendor
+              {isVendor ? 'Update Documents' : 'Register Vendor'}
             </>
           )}
         </button>
