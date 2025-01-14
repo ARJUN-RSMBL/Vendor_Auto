@@ -10,6 +10,7 @@ const RegisterComponent = () => {
     const [username, setUsername] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -20,6 +21,10 @@ const RegisterComponent = () => {
     function handleRegistrationForm(e) {
 
         e.preventDefault();
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
 
         const register = { name, username, email, password }
 
@@ -28,8 +33,10 @@ const RegisterComponent = () => {
         registerAPICall(register).then((response) => {
             console.log(response.data);
             toast.success('Registration successful!');
+            navigate('/login'); // Add navigation after successful registration
         }).catch(error => {
             console.error(error);
+            setError(error.response?.data?.message || 'Registration failed. Please try again.');
             toast.error('Registration failed. Please try again.');
         })
     }
@@ -166,8 +173,8 @@ const RegisterComponent = () => {
                                                 name="confirmPassword"
                                                 className="form-control border-start-0 border-end-0"
                                                 placeholder="Confirm password"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
                                                 required
                                             />
                                             <button

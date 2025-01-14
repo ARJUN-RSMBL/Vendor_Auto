@@ -12,7 +12,7 @@ const authClient = axios.create({
 });
 
 // export const registerAPICall = (registerObj) => axios.post(apiClient + '/register', registerObj);
-export const registerAPICall = (registerObj) => apiClient.post('/register', registerObj);
+export const registerAPICall = (registerObj) => apiClient.post('/api/auth/register', registerObj);
 
 // export const loginAPICall = (usernameOrEmail, password) => axios.post(apiClient + '/login', { usernameOrEmail, password});
 // export const loginAPICall = (usernameOrEmail, password) => apiClient.post('/login', { usernameOrEmail, password});
