@@ -1,11 +1,14 @@
 package com.vendor.controller;
 
+import com.vendor.dto.VendorDetailsDto;
 import com.vendor.entity.Vendor;
+import com.vendor.exception.ResourceNotFoundException;
 import com.vendor.service.VendorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +54,36 @@ public class VendorController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error occurred: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/details/{username}")
+    public ResponseEntity<VendorDetailsDto> getVendorDetailsByUsername(@PathVariable String username) {
+        try {
+            VendorDetailsDto vendorDetails = vendorService.getVendorDetailsByUsername(username);
+            return ResponseEntity.ok(vendorDetails);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/documents/update")
+    public ResponseEntity<?> updateVendorDocuments(
+            @RequestParam("username") String username,
+            @RequestParam("documents") String documentsJson,
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam("fileIndices") List<Integer> fileIndices) {
+        try {
+            vendorService.updateVendorDocuments(username, documentsJson, files, fileIndices);
+            return ResponseEntity.ok().body("Documents updated successfully");
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error updating documents: " + e.getMessage());
         }
     }
 

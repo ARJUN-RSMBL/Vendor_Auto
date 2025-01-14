@@ -1,28 +1,47 @@
 package com.vendor.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vendor.dto.DocumentDTO;
+import com.vendor.dto.VendorDetailsDto;
+import com.vendor.entity.Document;
+import com.vendor.entity.User;
 import com.vendor.entity.Vendor;
 import com.vendor.exception.ResourceNotFoundException;
+import com.vendor.repository.DocumentRepository;
+import com.vendor.repository.UserRepository;
 import com.vendor.repository.VendorRepository;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class VendorService {
 
     private final VendorRepository vendorRepository;
     private final JavaMailSender javaMailSender;
+    private final UserRepository userRepository;
+    private final DocumentRepository documentRepository;
 
     @Autowired
-    public VendorService(VendorRepository vendorRepository, JavaMailSender javaMailSender) {
+    public VendorService(VendorRepository vendorRepository, JavaMailSender javaMailSender, UserRepository userRepository, DocumentRepository documentRepository) {
         this.vendorRepository = vendorRepository;
         this.javaMailSender = javaMailSender;
+        this.userRepository = userRepository;
+        this.documentRepository = documentRepository;
     }
 
     public Vendor createVendor(Vendor vendor) {
@@ -40,6 +59,22 @@ public class VendorService {
             throw new RuntimeException("Vendor not found with name: " + vendorName);
         }
         return vendor;
+    }
+
+    public VendorDetailsDto getVendorDetailsByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Vendor vendor = user.getVendor();
+        if (vendor == null) {
+            throw new ResourceNotFoundException("Vendor details not found for this user");
+        }
+
+        return new VendorDetailsDto(
+                vendor.getName(),
+                vendor.getEmail(),
+                vendor.getVendorLicense()
+        );
     }
 
     public Vendor updateVendor(Long id, Vendor updatedVendor) {
@@ -135,6 +170,66 @@ public class VendorService {
                 vendor.getEmail(),
                 vendor.getExpiryDate(),
                 status);
+    }
+
+    @Transactional
+    public void updateVendorDocuments(String username, String documentsJson, List<MultipartFile> files, List<Integer> fileIndices) {
+        try {
+            // Get vendor details from username
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+            Vendor vendor = user.getVendor();
+            if (vendor == null) {
+                throw new ResourceNotFoundException("Vendor not found for user: " + username);
+            }
+
+            // Parse documents JSON
+            ObjectMapper mapper = new ObjectMapper();
+            List<DocumentDTO> documents = mapper.readValue(
+                    documentsJson,
+                    mapper.getTypeFactory().constructCollectionType(List.class, DocumentDTO.class)
+            );
+
+            // Process each file and its corresponding document data
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+                int documentIndex = fileIndices.get(i);
+                DocumentDTO documentDTO = documents.get(documentIndex);
+
+                Document document = new Document();
+                document.setVendor(vendor);
+                document.setDocumentTypeId(documentDTO.getDocumentTypeId());
+                document.setExpiryDate(LocalDate.parse(documentDTO.getExpiryDate()));
+                document.setFileName(file.getOriginalFilename());
+
+                // Save file and get path
+                String filePath = saveFile(file);
+                document.setFilePath(filePath);
+
+                // Save document to database
+                documentRepository.save(document);
+
+                // Update vendor's expiry date if this document's expiry is earlier
+                if (vendor.getExpiryDate() == null ||
+                        document.getExpiryDate().isBefore(vendor.getExpiryDate())) {
+                    vendor.setExpiryDate(document.getExpiryDate());
+                    vendorRepository.save(vendor);
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error processing document upload: " + e.getMessage(), e);
+        }
+    }
+
+    private String saveFile(MultipartFile file) throws IOException {
+        String uploadDir = "uploads/vendor-documents/";
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path path = Paths.get(uploadDir + fileName);
+        Files.createDirectories(path.getParent());
+        Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        return fileName;
     }
 
 }

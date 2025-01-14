@@ -26,17 +26,30 @@ public class User {
     )
     private Set<Role> roles;
 
-    public User(Long id, String name, String username, String email, String password, Set<Role> roles) {
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor_id")
+    private Vendor vendor;
+
+    public User(Long id, String name, String username, String email, String password, Set<Role> roles, Vendor vendor) {
         this.id = id;
         this.name = name;
         this.username = username;
         this.email = email;
         this.password = password;
         this.roles = roles;
+        this.vendor = vendor;
     }
 
     public User() {
 
+    }
+
+    public Vendor getVendor() {
+        return vendor;
+    }
+
+    public void setVendor(Vendor vendor) {
+        this.vendor = vendor;
     }
 
     public Long getId() {

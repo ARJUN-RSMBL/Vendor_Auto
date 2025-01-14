@@ -5,7 +5,7 @@ import '../styles/FormStyles.css';
 import vendorService from '../services/vendorService';
 import { getAllDocumentTypes } from '../services/documentTypeService';
 import DocumentsSection from '../pages/DocumentsSection';
-import { isVendorUser } from '../services/authService';
+import { isVendorUser, getLoggedInUser } from '../services/authService';
 
 function VendorFormComponent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,6 +20,7 @@ function VendorFormComponent() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isVendor, setIsVendor] = useState(false);
+  const [vendorDetails, setVendorDetails] = useState(null);
 
   // Add useEffect to fetch document types when component mounts
   useEffect(() => {
@@ -48,6 +49,26 @@ function VendorFormComponent() {
     setIsVendor(isVendorUser());
   }, []);
 
+  // Add this useEffect to fetch vendor details
+  useEffect(() => {
+    const fetchVendorDetails = async () => {
+      if (isVendor) {
+        try {
+          const username = getLoggedInUser();
+          console.log('Fetching details for username:', username);
+          const response = await vendorService.getVendorDetails(username);
+          console.log('Vendor details received:', response);
+          setVendorDetails(response);
+        } catch (error) {
+          console.error('Error fetching vendor details:', error);
+          toast.error('Failed to fetch vendor details');
+        }
+      }
+    };
+
+    fetchVendorDetails();
+  }, [isVendor]);
+
 
   const handleBlur = (e) => {
     const { name } = e.target;
@@ -70,19 +91,22 @@ function VendorFormComponent() {
     const newErrors = {};
     console.log('Starting validation with data:', formData);
 
-    // Required field validations
-    if (!formData.name?.trim()) {
-      newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length < 3) {
-      newErrors.name = 'Name must be at least 3 characters';
-    }
+    // Only validate vendor fields if not a vendor user
+    if (!isVendor) {
+      // Required field validations
+      if (!formData.name?.trim()) {
+        newErrors.name = 'Name is required';
+      } else if (formData.name.trim().length < 3) {
+        newErrors.name = 'Name must be at least 3 characters';
+      }
 
-    if (!formData.vendorLicense?.trim()) {
-      newErrors.vendorLicense = 'Vendor license is required';
-    }
+      if (!formData.vendorLicense?.trim()) {
+        newErrors.vendorLicense = 'Vendor license is required';
+      }
 
-    if (formData.email && !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      newErrors.email = 'Please enter a valid email address';
+      if (formData.email && !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
     }
 
     // Document validations
@@ -153,6 +177,14 @@ function VendorFormComponent() {
         if (formData.email) {
           formDataToSend.append('email', formData.email.trim());
         }
+      } else if (vendorDetails) {
+        // Append vendor details from logged-in user
+        console.log('Appending vendor details:', vendorDetails);
+        formDataToSend.append('name', vendorDetails.name);
+        formDataToSend.append('email', vendorDetails.email);
+        if (vendorDetails.vendorLicense) {
+          formDataToSend.append('vendorLicense', vendorDetails.vendorLicense);
+        }
       }
       // Add documents array as JSON string first to maintain structure
       // Create and log documents data before sending
@@ -166,15 +198,11 @@ function VendorFormComponent() {
       // Log files being sent
       formData.documents.forEach((doc, index) => {
         if (doc.file) {
-          console.log(`File ${index}:`, {
-            name: doc.file.name,
-            type: doc.file.type,
-            size: doc.file.size
-          });
-          formDataToSend.append(`files`, doc.file);
-          formDataToSend.append(`fileIndices`, index);
+            console.log(`Adding file ${index}:`, doc.file);
+            formDataToSend.append(`files`, doc.file);
+            formDataToSend.append(`fileIndices`, index);
         }
-      });
+    });
 
       // Log complete FormData contents
       console.log('Complete form data entries:');
@@ -183,9 +211,9 @@ function VendorFormComponent() {
       }
 
       // const response = await vendorService.createVendor(formDataToSend);
-      const response = isVendor 
-      ? await vendorService.updateVendorDocuments(formDataToSend)
-      : await vendorService.createVendor(formDataToSend);
+      const response = isVendor
+        ? await vendorService.updateVendorDocuments(formDataToSend)
+        : await vendorService.createVendor(formDataToSend);
       console.log('Full response:', response);
 
       if (response.data) {
