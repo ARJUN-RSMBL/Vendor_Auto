@@ -16,11 +16,19 @@ function VendorTableComponent() {
 
   const fetchVendors = async () => {
     try {
-      const vendors = await vendorService.getAllVendors(); // Remove .data
-      setVendors(vendors);
+      const response = await vendorService.getAllVendors();
+      console.log('Raw response:', response); // Debug log
+
+      // Ensure vendors is an array, or default to empty array if undefined
+      const vendorArray = Array.isArray(response) ? response :
+        (response?.data ? response.data : []); // Check for response.data
+
+      console.log('Processed vendors:', vendorArray); // Debug log
+      setVendors(vendorArray);
     } catch (error) {
       console.error('Error fetching vendors:', error);
       toast.error('Failed to fetch vendors');
+      setVendors([]);
     }
   };
 
@@ -50,12 +58,14 @@ function VendorTableComponent() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this vendor?')) {
       try {
-        await vendorService.deleteVendor(id);
+        const response = await vendorService.deleteVendor(id);
         toast.success('Vendor deleted successfully');
         fetchVendors();
       } catch (error) {
         console.error('Error deleting vendor:', error);
-        toast.error('Failed to delete vendor');
+        const errorMessage = error.response?.data?.message || 
+          'Cannot delete this vendor. It might be associated with a user account.';
+        toast.error(errorMessage);
       }
     }
   };
@@ -93,7 +103,7 @@ function VendorTableComponent() {
                 <td>{vendor.name}</td>
                 <td>{vendor.email}</td>
                 <td>{vendor.vendorLicense}</td>
-                <td>{new Date(vendor.expiryDate).toLocaleDateString()}</td>
+                <td>{vendor.expiryDate ? new Date(vendor.expiryDate).toLocaleDateString() : 'Not Set'}</td>
                 <td>
                   <span className={`status-badge ${vendor.status.toLowerCase()}`}>
                     {vendor.status}

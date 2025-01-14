@@ -7,7 +7,29 @@ const vendorService = {
   getAllVendors: async () => {
     try {
       const response = await apiClient.get('/vendor');
-      return response.data;
+      
+      // Parse the string response if needed
+      let vendors;
+      if (typeof response.data === 'string') {
+        const cleanedData = response.data.split('{"message":null}')[0];
+        vendors = JSON.parse(cleanedData);
+      } else {
+        vendors = response.data;
+      }
+  
+      // Map and filter out invalid vendors
+      return vendors
+        .filter(vendor => vendor.id && vendor.name) // Only include vendors with valid ID and name
+        .map(vendor => ({
+          id: vendor.id,
+          status: vendor.status || 'Unknown',
+          name: vendor.name,
+          vendorLicense: vendor.vendorLicense || '',
+          email: vendor.email || '',
+          // Only set expiryDate if it's valid
+          expiryDate: vendor.expiryDate ? new Date(vendor.expiryDate).toISOString() : null,
+        }));
+  
     } catch (error) {
       console.error('Error fetching vendors:', error);
       throw error;
@@ -24,17 +46,6 @@ const vendorService = {
       throw error;
     }
   },
-
-  // // Create new vendor
-  // createVendor: async (vendorData) => {
-  //     try {
-  //         const response = await apiClient.post('/vendor', vendorData);
-  //         return response.data;
-  //     } catch (error) {
-  //         console.error('Error creating vendor:', error);
-  //         throw error;
-  //     }
-  // },
   createVendor: async (formData) => {
     console.log('Sending request to create vendor');
     try {
@@ -98,8 +109,16 @@ const vendorService = {
   },
 
   // Delete vendor
-  deleteVendor: (id) => {
-    return apiClient.delete(`/vendor/${id}`);
+  deleteVendor: async (id) => {
+    try {
+      const response = await apiClient.delete(`/vendor/${id}`);
+      return response;
+    } catch (error) {
+      if (error.response?.status === 500) {
+        throw new Error('Cannot delete vendor: It may be associated with a user account');
+      }
+      throw error;
+    }
   },
 
   // Get expiry notifications
@@ -123,28 +142,45 @@ const vendorService = {
         formData.append('username', username);
       }
 
-      // Create a new FormData object with corrected parameter names
-      const updatedFormData = new FormData();
-      updatedFormData.append('username', username);
-      
-      // Add documents data
-      const documentsData = JSON.parse(formData.get('documents'));
-      updatedFormData.append('documents', formData.get('documents'));
-
-      // Add file with correct parameter name
-      const files = formData.getAll('files');
-      const fileIndices = formData.getAll('fileIndices');
-      
-      if (files.length > 0) {
-        updatedFormData.append('file', files[0]); // Server expects 'file' not 'files'
-        updatedFormData.append('documentIndex', fileIndices[0]);
+      // Debug: Log all form data entries
+      console.log('Form data contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value instanceof File ? `File: ${value.name}` : value}`);
       }
 
-      const response = await apiClient.post('/vendor/documents/update-with-file', updatedFormData, {
+      // Parse and validate documents data
+      const documentsData = JSON.parse(formData.get('documents'));
+      console.log('Documents data:', documentsData);
+
+      // Validate document structure
+      if (!Array.isArray(documentsData)) {
+        throw new Error('Invalid documents data format');
+      }
+
+      // Enhanced validation with detailed error messages
+      documentsData.forEach((doc, index) => {
+        const errors = [];
+        if (!doc.documentTypeId) errors.push('documentTypeId is required');
+        if (!doc.expiryDate) errors.push('expiryDate is required');
+        
+        if (errors.length > 0) {
+          throw new Error(`Document ${index + 1} validation failed: ${errors.join(', ')}`);
+        }
+      });
+
+      // Verify file attachments
+      const files = formData.getAll('files');
+      const fileIndices = formData.getAll('fileIndices');
+      console.log('Files to upload:', files.map(f => f.name));
+      console.log('File indices:', fileIndices);
+
+      // Make the API call with enhanced error handling
+      const response = await apiClient.post('/vendor/documents/update-with-file', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
         timeout: 30000,
+        validateStatus: null, // Allow all status codes for better error handling
       });
 
       // Enhanced error handling based on status codes
