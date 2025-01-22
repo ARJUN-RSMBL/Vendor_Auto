@@ -87,7 +87,7 @@ function Routers() {
                 } />
                 <Route path='/documents' element={
                     <AuthenticatedRoute>
-                        {hasVendorAccess() ? <VendorDocumentsComponent /> : <Navigate to="/" />}
+                        <VendorDocumentsComponent />
                     </AuthenticatedRoute>
                 } />
             </Routes>

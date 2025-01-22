@@ -40,7 +40,8 @@ function VendorDocumentsComponent() {
                     setGroupedDocuments(grouped);
                 } else {
                     // For vendor view, just set their documents
-                    setDocuments(Array.isArray(docs) ? docs : []);
+                    // setDocuments(Array.isArray(docs) ? docs : []);
+                    setDocuments(docs);
                 }
             } else {
                 setDocuments([]);
@@ -166,9 +167,9 @@ function VendorDocumentsComponent() {
         }
     };
 
-    if (!hasVendorAccess()) {
-        return <Navigate to="/login" replace />;
-    }
+    // if (!hasVendorAccess()) {
+    //     return <Navigate to="/login" replace />;
+    // }
 
     return (
         <div className="container mt-4">

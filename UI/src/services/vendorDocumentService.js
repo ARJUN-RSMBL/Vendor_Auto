@@ -47,12 +47,34 @@ export const uploadDocument = async (file, vendorId, documentTypeId, expiryDate)
 // };
 // ... existing imports ...
 
+// export const getVendorDocuments = async () => {
+//     try {
+//         const username = getLoggedInUser(); // Get the logged-in user's username
+//         const endpoint = isAdminUser() 
+//             ? '/vendor/documents'  // Admin endpoint to get all documents
+//             : `/vendor/documents/user/${username}`; // Vendor-specific endpoint
+
+//         const response = await apiClient.get(endpoint);
+//         return response;
+//     } catch (error) {
+//         console.error('Error fetching vendor documents:', error);
+//         throw error;
+//     }
+// };
 export const getVendorDocuments = async () => {
     try {
         const username = getLoggedInUser(); // Get the logged-in user's username
-        const endpoint = isAdminUser() 
-            ? '/vendor/documents'  // Admin endpoint to get all documents
-            : `/vendor/documents/user/${username}`; // Vendor-specific endpoint
+        
+        if (!username) {
+            throw new Error('No logged in user found');
+        }
+
+        let endpoint;
+        if (isAdminUser()) {
+            endpoint = '/vendor/documents';  // Admin endpoint to get all documents
+        } else {
+            endpoint = `/vendor/documents/user/${username}`; // Vendor-specific endpoint
+        }
 
         const response = await apiClient.get(endpoint);
         return response;
@@ -61,7 +83,6 @@ export const getVendorDocuments = async () => {
         throw error;
     }
 };
-
 // Get single document (returns file content)
 export const getDocument = async (documentId) => {
     try {
