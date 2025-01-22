@@ -7,7 +7,7 @@ import {
   logout,
   hasVendorAccess  // Add this import
 } from '../services/authService'
-import {NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 
 const HeaderComponent = () => {
 
@@ -28,7 +28,7 @@ const HeaderComponent = () => {
     const collapse = new Collapse(collapseRef.current, {
       toggle: false
     });
-    
+
     // Clean up
     return () => {
       if (collapse) {
@@ -87,6 +87,19 @@ const HeaderComponent = () => {
                     <NavLink to="/document-types" className="nav-link d-flex align-items-center">
                       <i className="bi bi-file-earmark-text me-1"></i>
                       Document Types
+                    </NavLink>
+                  </li>
+                </>
+              )}
+
+              {/* Add this new nav item in the Admin section */}
+              {isAuth && isAdmin && (
+                <>
+                  {/* ... existing admin items ... */}
+                  <li className='nav-item'>
+                    <NavLink to="/users" className="nav-link d-flex align-items-center">
+                      <i className="bi bi-people-fill me-1"></i>
+                      Users
                     </NavLink>
                   </li>
                 </>

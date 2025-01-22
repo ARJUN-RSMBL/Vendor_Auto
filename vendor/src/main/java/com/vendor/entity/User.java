@@ -30,6 +30,17 @@ public class User {
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;
 
+    @Column(nullable = false)
+    private boolean active = true;  // Add this field with default value
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public User(Long id, String name, String username, String email, String password, Set<Role> roles, Vendor vendor) {
         this.id = id;
         this.name = name;
@@ -99,4 +110,5 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+
 }

@@ -13,6 +13,7 @@ import PropTypes from 'prop-types'
 import WelcomeAdminComponent from '../components/WelcomeAdminComponent'
 import DocumentTypeManagement from '../pages/DocumentTypeManagement';
 import VendorDocumentsComponent from '../pages/VendorDocumentsComponent';
+import UserTableComponent from '../pages/UserTableComponent';
 
 function Routers() {
 
@@ -88,6 +89,11 @@ function Routers() {
                 <Route path='/documents' element={
                     <AuthenticatedRoute>
                         <VendorDocumentsComponent />
+                    </AuthenticatedRoute>
+                } />
+                <Route path='/users' element={
+                    <AuthenticatedRoute>
+                        {isAdmin ? <UserTableComponent /> : <Navigate to="/" />}
                     </AuthenticatedRoute>
                 } />
             </Routes>

@@ -45,7 +45,7 @@ function VendorTableComponent() {
     fetchVendors();
   }, []);
 
-  const handleView = (vendor) => {
+  const handleView = (vendor) => {  
     setSelectedVendor(vendor);
     setIsViewModalOpen(true);
   };
