@@ -23,12 +23,12 @@ function VendorDocumentsComponent() {
             setLoading(true);
             setError(null);
             const response = await getVendorDocuments();
-
+            
+            // Even if the request returns 404, we'll just treat it as empty documents
             if (response?.data) {
                 const docs = Array.isArray(response.data) ? response.data : [];
-
+                
                 if (isAdminUser()) {
-                    // Group documents by vendor for admin view
                     const grouped = docs.reduce((acc, doc) => {
                         const vendorName = doc.vendorName || 'Unknown Vendor';
                         if (!acc[vendorName]) {
@@ -39,20 +39,22 @@ function VendorDocumentsComponent() {
                     }, {});
                     setGroupedDocuments(grouped);
                 } else {
-                    // For vendor view, just set their documents
-                    // setDocuments(Array.isArray(docs) ? docs : []);
                     setDocuments(docs);
                 }
             } else {
+                // If no data or 404 response, just set empty arrays
                 setDocuments([]);
                 setGroupedDocuments({});
-                setError('No data received from server');
             }
         } catch (error) {
-            console.error('Error fetching documents:', error);
-            setError(error.message || 'Failed to fetch documents');
-            setDocuments([]);
-            setGroupedDocuments({});
+            // Don't show error message for 404 responses
+            if (error.response?.status === 404) {
+                setDocuments([]);
+                setGroupedDocuments({});
+            } else {
+                console.error('Error fetching documents:', error);
+                setError('Unable to fetch documents. Please try again later.');
+            }
         } finally {
             setLoading(false);
         }
@@ -140,8 +142,28 @@ function VendorDocumentsComponent() {
             );
         }
 
+        const EmptyStateMessage = () => (
+            <div className="text-center p-5 bg-light rounded shadow-sm">
+                <i className="bi bi-cloud-upload text-primary" style={{ fontSize: '4rem' }}></i>
+                <h4 className="mt-3 text-primary">No Documents Yet</h4>
+                <p className="text-muted">No documents have been uploaded yet.</p>
+                <p className="text-muted">Please upload your required documents to get started.</p>
+                <Button
+                    variant="primary"
+                    href="/form"
+                    className="mt-3"
+                >
+                    <i className="bi bi-upload me-2"></i>
+                    Upload Documents
+                </Button>
+            </div>
+        );
+
         if (isAdminUser()) {
             // Admin view - grouped by vendor
+            if (Object.keys(groupedDocuments).length === 0) {
+                return <EmptyStateMessage />;
+            }
             return Object.entries(groupedDocuments).map(([vendorName, vendorDocs]) => (
                 <div key={vendorName} className="mb-4">
                     <h3 className="mb-3">{vendorName}</h3>
@@ -157,10 +179,7 @@ function VendorDocumentsComponent() {
                     {documents.length > 0 ? (
                         renderDocumentsTable(documents)
                     ) : (
-                        <div className="text-center p-4 bg-light rounded">
-                            <i className="bi bi-inbox fs-1 text-muted"></i>
-                            <p className="mt-2 text-muted">No documents found.</p>
-                        </div>
+                        <EmptyStateMessage />
                     )}
                 </div>
             );
