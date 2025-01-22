@@ -1,5 +1,6 @@
 package com.vendor.controller;
 
+import com.vendor.dto.UserDetailsDto;
 import com.vendor.dto.VendorDetailsDto;
 import com.vendor.entity.Vendor;
 import com.vendor.exception.ResourceNotFoundException;
@@ -58,10 +59,10 @@ public class VendorController {
     }
 
     @GetMapping("/details/{username}")
-    public ResponseEntity<VendorDetailsDto> getVendorDetailsByUsername(@PathVariable String username) {
+    public ResponseEntity<UserDetailsDto> getVendorDetailsByUsername(@PathVariable String username) {
         try {
-            VendorDetailsDto vendorDetails = vendorService.getVendorDetailsByUsername(username);
-            return ResponseEntity.ok(vendorDetails);
+            UserDetailsDto userDetails = vendorService.getVendorDetailsByUsername(username);
+            return ResponseEntity.ok(userDetails);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {

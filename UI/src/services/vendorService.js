@@ -7,7 +7,7 @@ const vendorService = {
   getAllVendors: async () => {
     try {
       const response = await apiClient.get('/vendor');
-      
+
       // Parse the string response if needed
       let vendors;
       if (typeof response.data === 'string') {
@@ -16,7 +16,7 @@ const vendorService = {
       } else {
         vendors = response.data;
       }
-  
+
       // Map and filter out invalid vendors
       return vendors
         .filter(vendor => vendor.id && vendor.name) // Only include vendors with valid ID and name
@@ -29,7 +29,7 @@ const vendorService = {
           // Only set expiryDate if it's valid
           expiryDate: vendor.expiryDate ? new Date(vendor.expiryDate).toISOString() : null,
         }));
-  
+
     } catch (error) {
       console.error('Error fetching vendors:', error);
       throw error;
@@ -126,15 +126,32 @@ const vendorService = {
     return apiClient.get('/vendor/test-scheduler');
   },
   // Add this method inside the vendorService object
+  // getVendorDetails: async (username) => {
+  //   try {
+  //     const response = await apiClient.get(`/vendor/details/${username}`);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Error fetching vendor details:', error);
+  //     throw error;
+  //   }
+  // },
   getVendorDetails: async (username) => {
     try {
+      console.log('Making request to:', apiClient.defaults.baseURL + `/vendor/details/${username}`);
       const response = await apiClient.get(`/vendor/details/${username}`);
+      console.log('Response received:', response);
       return response.data;
     } catch (error) {
-      console.error('Error fetching vendor details:', error);
+      console.error('Error in getVendorDetails:', {
+        url: apiClient.defaults.baseURL + `/vendor/details/${username}`,
+        status: error.response?.status,
+        errorData: error.response?.data,
+        message: error.message
+      });
       throw error;
     }
   },
+
   updateVendorDocuments: async (formData) => {
     try {
       const username = getLoggedInUser();
@@ -162,7 +179,7 @@ const vendorService = {
         const errors = [];
         if (!doc.documentTypeId) errors.push('documentTypeId is required');
         if (!doc.expiryDate) errors.push('expiryDate is required');
-        
+
         if (errors.length > 0) {
           throw new Error(`Document ${index + 1} validation failed: ${errors.join(', ')}`);
         }

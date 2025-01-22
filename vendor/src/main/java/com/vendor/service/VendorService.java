@@ -2,6 +2,7 @@ package com.vendor.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vendor.dto.DocumentDTO;
+import com.vendor.dto.UserDetailsDto;
 import com.vendor.dto.VendorDetailsDto;
 import com.vendor.entity.Document;
 import com.vendor.entity.User;
@@ -66,19 +67,32 @@ public class VendorService {
         return vendor;
     }
 
-    public VendorDetailsDto getVendorDetailsByUsername(String username) {
+//    public VendorDetailsDto getVendorDetailsByUsername(String username) {
+//        User user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+//
+//        Vendor vendor = user.getVendor();
+//        if (vendor == null) {
+//            throw new ResourceNotFoundException("Vendor details not found for this user");
+//        }
+//
+//        return new VendorDetailsDto(
+//                vendor.getName(),
+//                vendor.getEmail(),
+//                vendor.getVendorLicense()
+//        );
+//    }
+
+    public UserDetailsDto getVendorDetailsByUsername(String username) {
+        System.out.println("Attempting to find user with username: " + username);
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Vendor vendor = user.getVendor();
-        if (vendor == null) {
-            throw new ResourceNotFoundException("Vendor details not found for this user");
-        }
-
-        return new VendorDetailsDto(
-                vendor.getName(),
-                vendor.getEmail(),
-                vendor.getVendorLicense()
+        return new UserDetailsDto(
+                user.getName(),
+                user.getUsername(),
+                user.getEmail()
         );
     }
 

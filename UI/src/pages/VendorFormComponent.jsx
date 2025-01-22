@@ -55,13 +55,27 @@ function VendorFormComponent() {
       if (isVendor) {
         try {
           const username = getLoggedInUser();
-          // console.log('Fetching details for username:', username);
+          console.log('Current username:', username);
           const response = await vendorService.getVendorDetails(username);
-          // console.log('Vendor details received:', response);
+          console.log('User details response:', response);
+
+          // Update form data with user details
+          setFormData(prevData => ({
+            ...prevData,
+            name: response.name || '',
+            email: response.email || '',
+            // Keep existing documents array
+            documents: prevData.documents
+          }));
+
           setVendorDetails(response);
         } catch (error) {
-          console.error('Error fetching vendor details:', error);
-          toast.error('Failed to fetch vendor details');
+          console.error('Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+          });
+          toast.error('Failed to fetch user details');
         }
       }
     };
@@ -198,11 +212,11 @@ function VendorFormComponent() {
       // Log files being sent
       formData.documents.forEach((doc, index) => {
         if (doc.file) {
-            console.log(`Adding file ${index}:`, doc.file);
-            formDataToSend.append(`files`, doc.file);
-            formDataToSend.append(`fileIndices`, index);
+          console.log(`Adding file ${index}:`, doc.file);
+          formDataToSend.append(`files`, doc.file);
+          formDataToSend.append(`fileIndices`, index);
         }
-    });
+      });
 
       // Log complete FormData contents
       // console.log('Complete form data entries:');
@@ -354,33 +368,34 @@ function VendorFormComponent() {
                 )}
               </div>
             </div>
-
-            <div className={`form-group ${errors.vendorLicense && touched.vendorLicense ? 'has-error' : ''}`}>
-              <label htmlFor="vendorLicense" className="form-label">
-                <i className="bi bi-card-text me-2"></i>
-                Vendor License
-              </label>
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  id="vendorLicense"
-                  name="vendorLicense"
-                  value={formData.vendorLicense}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  placeholder="Enter vendor license number"
-                  required
-                  className="form-input"
-                />
-                {errors.vendorLicense && touched.vendorLicense && (
-                  <div className="error-message">
-                    <i className="bi bi-exclamation-circle"></i>
-                    {errors.vendorLicense}
-                  </div>
-                )}
-              </div>
-            </div>
           </>)}
+
+        {/* Vendor License section - visible for all roles */}
+        <div className={`form-group ${errors.vendorLicense && touched.vendorLicense ? 'has-error' : ''}`}>
+          <label htmlFor="vendorLicense" className="form-label">
+            <i className="bi bi-card-text me-2"></i>
+            Vendor License
+          </label>
+          <div className="input-wrapper">
+            <input
+              type="text"
+              id="vendorLicense"
+              name="vendorLicense"
+              value={formData.vendorLicense}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Enter vendor license number"
+              required
+              className="form-input"
+            />
+            {errors.vendorLicense && touched.vendorLicense && (
+              <div className="error-message">
+                <i className="bi bi-exclamation-circle"></i>
+                {errors.vendorLicense}
+              </div>
+            )}
+          </div>
+        </div>
 
 
         {/* Documents Section */}
