@@ -7,31 +7,63 @@ const vendorService = {
   getAllVendors: async () => {
     try {
       const response = await apiClient.get('/vendor');
+      console.log('Raw vendor response:', response);
 
-      // Parse the string response if needed
-      let vendors;
-      if (typeof response.data === 'string') {
-        const cleanedData = response.data.split('{"message":null}')[0];
-        vendors = JSON.parse(cleanedData);
-      } else {
-        vendors = response.data;
+      // Check if response.data exists
+      if (!response.data) {
+        console.error('No data received from vendor API');
+        return [];
       }
 
+      // Parse the string response if needed
+      let vendors = response.data;
+      if (typeof response.data === 'string') {
+        try {
+          // Remove the {"message":null} from the end of the string
+          const cleanedData = response.data.split('{"message":null}')[0];
+          vendors = JSON.parse(cleanedData);
+        } catch (parseError) {
+          console.error('Error parsing vendor data:', parseError);
+          return [];
+        }
+      }
+
+      // Ensure vendors is an array
+      if (!Array.isArray(vendors)) {
+        console.error('Vendors data is not an array:', vendors);
+        return [];
+      }
+
+      console.log('Processed vendors before mapping:', vendors);
+
       // Map and filter out invalid vendors
-      return vendors
-        .filter(vendor => vendor.id && vendor.name) // Only include vendors with valid ID and name
+      const mappedVendors = vendors
+        .filter(vendor => {
+          // Modified validation to check for user.name instead of name
+          const isValid = vendor && vendor.id && vendor.user && vendor.user.name;
+          if (!isValid) {
+            console.log('Filtered out invalid vendor:', vendor);
+          }
+          return isValid;
+        })
         .map(vendor => ({
           id: vendor.id,
           status: vendor.status || 'Unknown',
-          name: vendor.name,
+          name: vendor.user?.name || '', // Get name from user object
           vendorLicense: vendor.vendorLicense || '',
-          email: vendor.email || '',
-          // Only set expiryDate if it's valid
+          email: vendor.user?.email || '', // Get email from user object if it exists
           expiryDate: vendor.expiryDate ? new Date(vendor.expiryDate).toISOString() : null,
         }));
 
+      console.log('Final mapped vendors:', mappedVendors);
+      return mappedVendors;
+
     } catch (error) {
       console.error('Error fetching vendors:', error);
+      if (error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
       throw error;
     }
   },
