@@ -196,15 +196,22 @@ public Optional<VendorDocument> getDocument(Long documentId) {
         try {
             logger.info("Starting document update process for user: {}", username);
 
-            // Get vendor
+            // Get user and create vendor if doesn't exist
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
             Vendor vendor = user.getVendor();
             if (vendor == null) {
-                throw new RuntimeException("No vendor associated with user: " + username);
+                vendor = new Vendor();
+                vendor.setName(user.getName());
+                vendor.setEmail(user.getEmail());
+                vendor.setUser(user);
+                vendor = VendorRepository.save(vendor);
+                user.setVendor(vendor);
+                userRepository.save(user);
+                logger.info("Created new vendor for user: {}", username);
             }
-            logger.info("Found vendor: {}", vendor.getName());
+            logger.info("Found/Created vendor: {}", vendor.getName());
 
             // Parse documents JSON
             ObjectMapper mapper = new ObjectMapper();
@@ -249,6 +256,14 @@ public Optional<VendorDocument> getDocument(Long documentId) {
 
                 documentRepository.save(document);
                 logger.info("Document record saved with ID: {}", document.getDocumentId());
+
+                // Update vendor's expiry date if this document's expiry is earlier
+                if (vendor.getExpiryDate() == null ||
+                        expiryDate.isBefore(vendor.getExpiryDate())) {
+                    vendor.setExpiryDate(expiryDate);
+                    VendorRepository.save(vendor);
+                    logger.info("Updated vendor expiry date to: {}", expiryDate);
+                }
             }
 
         } catch (Exception e) {
@@ -258,8 +273,9 @@ public Optional<VendorDocument> getDocument(Long documentId) {
     }
 
     public Vendor getVendorByUsername(String username) {
-        return VendorRepository.findByUserUsername(username)
-                .orElseThrow(() -> new RuntimeException("Vendor not found with username: " + username));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+        return user.getVendor();
     }
 
     @Transactional(readOnly = true)

@@ -179,26 +179,10 @@ function VendorFormComponent() {
     try {
       const formDataToSend = new FormData();
 
-      // Add basic vendor fields
-      // formDataToSend.append('name', formData.name.trim());
-      // formDataToSend.append('vendorLicense', formData.vendorLicense.trim());
-      // if (formData.email) {
-      //   formDataToSend.append('email', formData.email.trim());
-      // }
-      if (!isVendor) {
-        formDataToSend.append('name', formData.name.trim());
-        formDataToSend.append('vendorLicense', formData.vendorLicense.trim());
-        if (formData.email) {
-          formDataToSend.append('email', formData.email.trim());
-        }
-      } else if (vendorDetails) {
-        // Append vendor details from logged-in user
-        console.log('Appending vendor details:', vendorDetails);
+      if (isVendor && vendorDetails) {
         formDataToSend.append('name', vendorDetails.name);
         formDataToSend.append('email', vendorDetails.email);
-        if (vendorDetails.vendorLicense) {
-          formDataToSend.append('vendorLicense', vendorDetails.vendorLicense);
-        }
+        formDataToSend.append('username', vendorDetails.username);
       }
       // Add documents array as JSON string first to maintain structure
       // Create and log documents data before sending
@@ -206,15 +190,13 @@ function VendorFormComponent() {
         documentTypeId: doc.documentTypeId,
         expiryDate: new Date(doc.expiryDate).toISOString().split('T')[0]
       }));
-      console.log('Documents data being sent:', documentsData);
       formDataToSend.append('documents', JSON.stringify(documentsData));
 
-      // Log files being sent
+      // Change: Append files with correct parameter name
       formData.documents.forEach((doc, index) => {
         if (doc.file) {
-          console.log(`Adding file ${index}:`, doc.file);
-          formDataToSend.append(`files`, doc.file);
-          formDataToSend.append(`fileIndices`, index);
+          formDataToSend.append('file', doc.file); // Changed from 'files' to 'file'
+          formDataToSend.append('fileIndex', index.toString()); // Changed from 'fileIndices' to 'fileIndex'
         }
       });
 

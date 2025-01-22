@@ -126,15 +126,7 @@ const vendorService = {
     return apiClient.get('/vendor/test-scheduler');
   },
   // Add this method inside the vendorService object
-  // getVendorDetails: async (username) => {
-  //   try {
-  //     const response = await apiClient.get(`/vendor/details/${username}`);
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Error fetching vendor details:', error);
-  //     throw error;
-  //   }
-  // },
+  
   getVendorDetails: async (username) => {
     try {
       console.log('Making request to:', apiClient.defaults.baseURL + `/vendor/details/${username}`);
@@ -152,78 +144,104 @@ const vendorService = {
     }
   },
 
+  // updateVendorDocuments: async (formData) => {
+  //   try {
+  //     const username = getLoggedInUser();
+  //     if (!formData.has('username')) {
+  //       formData.append('username', username);
+  //     }
+
+  //     // Debug: Log all form data entries
+  //     console.log('Form data contents:');
+  //     for (let [key, value] of formData.entries()) {
+  //       console.log(`${key}: ${value instanceof File ? `File: ${value.name}` : value}`);
+  //     }
+
+  //     // Parse and validate documents data
+  //     const documentsData = JSON.parse(formData.get('documents'));
+  //     console.log('Documents data:', documentsData);
+
+  //     // Validate document structure
+  //     if (!Array.isArray(documentsData)) {
+  //       throw new Error('Invalid documents data format');
+  //     }
+
+  //     // Enhanced validation with detailed error messages
+  //     documentsData.forEach((doc, index) => {
+  //       const errors = [];
+  //       if (!doc.documentTypeId) errors.push('documentTypeId is required');
+  //       if (!doc.expiryDate) errors.push('expiryDate is required');
+
+  //       if (errors.length > 0) {
+  //         throw new Error(`Document ${index + 1} validation failed: ${errors.join(', ')}`);
+  //       }
+  //     });
+
+  //     // Verify file attachments
+  //     const files = formData.getAll('files');
+  //     const fileIndices = formData.getAll('fileIndices');
+  //     console.log('Files to upload:', files.map(f => f.name));
+  //     console.log('File indices:', fileIndices);
+
+  //     // Make the API call with enhanced error handling
+  //     const response = await apiClient.post('/vendor/documents/update-with-file', formData, {
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //       },
+  //       timeout: 30000,
+  //       validateStatus: null, // Allow all status codes for better error handling
+  //     });
+
+  //     // Enhanced error handling based on status codes
+  //     if (response.status !== 200) {
+  //       const errorMessage = response.data?.message || 'Unknown server error';
+  //       console.error('Server response:', {
+  //         status: response.status,
+  //         data: response.data,
+  //         headers: response.headers
+  //       });
+  //       throw new Error(`Server error (${response.status}): ${errorMessage}`);
+  //     }
+
+  //     return response;
+  //   } catch (error) {
+  //     console.error('Document update error details:', {
+  //       message: error.message,
+  //       response: error.response?.data,
+  //       status: error.response?.status
+  //     });
+
+  //     // Throw a user-friendly error with technical details
+  //     throw new Error(
+  //       `Failed to update documents: ${error.response?.data?.message || error.message}. ` +
+  //       'Please check the console for technical details.'
+  //     );
+  //   }
+  // }
   updateVendorDocuments: async (formData) => {
     try {
-      const username = getLoggedInUser();
-      if (!formData.has('username')) {
-        formData.append('username', username);
-      }
-
-      // Debug: Log all form data entries
       console.log('Form data contents:');
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value instanceof File ? `File: ${value.name}` : value}`);
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[0] === 'file' ? 'File: ' + pair[1].name : pair[1]}`);
       }
-
-      // Parse and validate documents data
-      const documentsData = JSON.parse(formData.get('documents'));
-      console.log('Documents data:', documentsData);
-
-      // Validate document structure
-      if (!Array.isArray(documentsData)) {
-        throw new Error('Invalid documents data format');
-      }
-
-      // Enhanced validation with detailed error messages
-      documentsData.forEach((doc, index) => {
-        const errors = [];
-        if (!doc.documentTypeId) errors.push('documentTypeId is required');
-        if (!doc.expiryDate) errors.push('expiryDate is required');
-
-        if (errors.length > 0) {
-          throw new Error(`Document ${index + 1} validation failed: ${errors.join(', ')}`);
+  
+      const response = await apiClient.post('/vendor/documents/update-with-file', 
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          }
         }
-      });
-
-      // Verify file attachments
-      const files = formData.getAll('files');
-      const fileIndices = formData.getAll('fileIndices');
-      console.log('Files to upload:', files.map(f => f.name));
-      console.log('File indices:', fileIndices);
-
-      // Make the API call with enhanced error handling
-      const response = await apiClient.post('/vendor/documents/update-with-file', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 30000,
-        validateStatus: null, // Allow all status codes for better error handling
-      });
-
-      // Enhanced error handling based on status codes
-      if (response.status !== 200) {
-        const errorMessage = response.data?.message || 'Unknown server error';
-        console.error('Server response:', {
-          status: response.status,
-          data: response.data,
-          headers: response.headers
-        });
-        throw new Error(`Server error (${response.status}): ${errorMessage}`);
-      }
-
+      );
+  
       return response;
     } catch (error) {
       console.error('Document update error details:', {
-        message: error.message,
+        message: error.response?.data?.error || 'Unknown server error',
         response: error.response?.data,
         status: error.response?.status
       });
-
-      // Throw a user-friendly error with technical details
-      throw new Error(
-        `Failed to update documents: ${error.response?.data?.message || error.message}. ` +
-        'Please check the console for technical details.'
-      );
+      throw new Error(`Failed to update documents: ${error.response?.data?.error || 'Unknown error'}`);
     }
   }
 };
